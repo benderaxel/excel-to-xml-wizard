@@ -3,9 +3,18 @@ import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Copy, Check, ClipboardCheck } from 'lucide-react';
+import { Copy, Check, ClipboardCheck, Table } from 'lucide-react';
 import { ExcelData } from '../utils/excelParser';
 import { generateRowXml, generateXml } from '../utils/xmlGenerator';
+import { 
+  Table as UITable, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface XmlOutputProps {
   data: ExcelData;
@@ -72,7 +81,10 @@ const XmlOutput: React.FC<XmlOutputProps> = ({ data, selectedParameters }) => {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl">Generated XML</CardTitle>
+        <CardTitle className="text-xl flex items-center gap-2">
+          <Table className="h-5 w-5" />
+          Generated XML
+        </CardTitle>
         <Button
           variant="outline"
           size="sm"
@@ -99,41 +111,49 @@ const XmlOutput: React.FC<XmlOutputProps> = ({ data, selectedParameters }) => {
             <p className="text-gray-500">No data available</p>
           </div>
         ) : (
-          <div className="rounded bg-gray-50 p-1 overflow-auto max-h-[500px]">
-            <pre ref={xmlRef} className="text-xs sm:text-sm whitespace-pre overflow-auto p-3">
-              {'<?xml version="1.0" encoding="UTF-8"?>\n<rows>'}
-              
-              {data.rows.map((row, index) => {
-                const rowXml = generateRowXml(row, selectedParameters);
-                return (
-                  <div
-                    key={index}
-                    className="group relative hover:bg-blue-50 border-l-2 border-transparent hover:border-blue-300 pl-2"
-                  >
-                    {rowXml.split('\n').map((line, lineIndex) => (
-                      <div key={lineIndex}>{line}</div>
-                    ))}
-                    
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleCopyRow(row, index)}
-                    >
-                      {copiedRow === index ? (
-                        <Check className="h-3 w-3" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </div>
-                );
-              })}
-              
-              {'</rows>'}
-            </pre>
-          </div>
+          <ScrollArea className="h-[400px] rounded border">
+            <UITable>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">#</TableHead>
+                  <TableHead>XML Content</TableHead>
+                  <TableHead className="w-24 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.rows.map((row, index) => {
+                  const rowXml = generateRowXml(row, selectedParameters);
+                  return (
+                    <TableRow key={index} className="group">
+                      <TableCell className="font-medium">{index + 1}</TableCell>
+                      <TableCell>
+                        <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded overflow-auto max-h-[120px]">
+                          {rowXml}
+                        </pre>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopyRow(row, index)}
+                        >
+                          {copiedRow === index ? (
+                            <Check className="h-4 w-4" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </UITable>
+          </ScrollArea>
         )}
+        
+        {/* Hidden pre element containing complete XML for "Copy All" functionality */}
+        <pre ref={xmlRef} className="hidden">{completeXml}</pre>
       </CardContent>
     </Card>
   );
