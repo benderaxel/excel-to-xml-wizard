@@ -61,6 +61,21 @@ const XmlOutput: React.FC<XmlOutputProps> = ({ data, selectedParameters }) => {
     setTimeout(() => setCopiedRow(null), 2000);
   };
   
+  // Extract plain text values from XML for display
+  const getPlainTextValues = (row: Record<string, string | number>) => {
+    return selectedParameters.reduce((result: Record<string, string | number>, param) => {
+      result[param] = row[param] !== undefined ? row[param] : '';
+      return result;
+    }, {});
+  };
+  
+  // Format plain text values for display
+  const formatPlainTextDisplay = (values: Record<string, string | number>) => {
+    return Object.entries(values)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join('\n');
+  };
+  
   // If no parameters selected, show prompt
   if (selectedParameters.length === 0) {
     return (
@@ -116,19 +131,21 @@ const XmlOutput: React.FC<XmlOutputProps> = ({ data, selectedParameters }) => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-16">#</TableHead>
-                  <TableHead>XML Content</TableHead>
+                  <TableHead>Data</TableHead>
                   <TableHead className="w-24 text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.rows.map((row, index) => {
-                  const rowXml = generateRowXml(row, selectedParameters);
+                  const plainTextValues = getPlainTextValues(row);
+                  const displayText = formatPlainTextDisplay(plainTextValues);
+                  
                   return (
                     <TableRow key={index} className="group">
                       <TableCell className="font-medium">{index + 1}</TableCell>
                       <TableCell>
                         <pre className="text-xs whitespace-pre-wrap bg-gray-50 p-2 rounded overflow-auto max-h-[120px]">
-                          {rowXml}
+                          {displayText}
                         </pre>
                       </TableCell>
                       <TableCell className="text-right">
@@ -136,6 +153,7 @@ const XmlOutput: React.FC<XmlOutputProps> = ({ data, selectedParameters }) => {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopyRow(row, index)}
+                          title="Copy as XML"
                         >
                           {copiedRow === index ? (
                             <Check className="h-4 w-4" />
