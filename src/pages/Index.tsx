@@ -16,6 +16,9 @@ const Index = () => {
   const handleFileProcessed = (data: ExcelData) => {
     setExcelData(data);
     setSelectedParameters([]); // Reset selected parameters
+  };
+  
+  const initiateProcessing = () => {
     setCurrentStep(2);
   };
   
@@ -52,7 +55,10 @@ const Index = () => {
           
           <section className={`mb-8 ${currentStep === 1 ? 'block' : 'hidden'}`}>
             <h2 className="text-xl font-semibold mb-4">Step 1: Upload Excel File</h2>
-            <FileUpload onFileProcessed={handleFileProcessed} />
+            <FileUpload 
+              onFileProcessed={handleFileProcessed} 
+              onInitiateProcessing={initiateProcessing}
+            />
           </section>
           
           {excelData && (

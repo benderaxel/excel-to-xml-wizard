@@ -1,20 +1,23 @@
-
 import React, { useCallback, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { Upload, FileText, ArrowRight, Check } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 import { parseExcelFile, ExcelData } from '../utils/excelParser';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
+  onInitiateProcessing: () => void;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProcessing }) => {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [parsedData, setParsedData] = useState<ExcelData | null>(null);
   
   const handleFile = useCallback(async (file: File) => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
@@ -28,10 +31,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed }) => {
     
     setFileName(file.name);
     setIsProcessing(true);
+    setUploadSuccess(false);
     
     try {
       const data = await parseExcelFile(file);
-      onFileProcessed(data);
+      setParsedData(data);
+      setUploadSuccess(true);
       toast({
         title: "File uploaded successfully",
         description: `Processed ${data.rows.length} rows with ${data.headers.length} columns`,
@@ -46,7 +51,14 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed }) => {
     } finally {
       setIsProcessing(false);
     }
-  }, [onFileProcessed, toast]);
+  }, [toast]);
+  
+  const handleProcessData = () => {
+    if (parsedData) {
+      onFileProcessed(parsedData);
+      onInitiateProcessing();
+    }
+  };
   
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -117,12 +129,34 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed }) => {
           </label>
         </div>
         
-        {fileName && !isProcessing && (
+        {uploadSuccess && (
+          <div className="mt-4 space-y-4">
+            <Alert className="bg-green-50 border-green-200">
+              <Check className="h-4 w-4 text-green-500" />
+              <AlertDescription className="text-green-700">
+                Excel file successfully uploaded and parsed! {parsedData?.rows.length} rows are ready for processing.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="flex justify-center">
+              <Button 
+                onClick={handleProcessData}
+                className="gap-2"
+              >
+                Process <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+        
+        {fileName && !isProcessing && !uploadSuccess && (
           <div className="mt-4 flex justify-center">
             <Button 
               variant="outline"
               onClick={() => {
                 setFileName(null);
+                setUploadSuccess(false);
+                setParsedData(null);
                 document.getElementById('file-upload') && ((document.getElementById('file-upload') as HTMLInputElement).value = '');
               }}
             >

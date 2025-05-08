@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
+import { Input } from "@/components/ui/input";
 
 interface ParameterSelectionProps {
   headers: string[];
@@ -17,6 +18,20 @@ const ParameterSelection: React.FC<ParameterSelectionProps> = ({
   selectedParameters, 
   setSelectedParameters 
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredHeaders, setFilteredHeaders] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredHeaders(headers);
+    } else {
+      const filtered = headers.filter(header => 
+        header.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredHeaders(filtered);
+    }
+  }, [searchTerm, headers]);
+
   const toggleParameter = (parameter: string) => {
     setSelectedParameters(prev => 
       prev.includes(parameter)
@@ -57,8 +72,21 @@ const ParameterSelection: React.FC<ParameterSelectionProps> = ({
         </div>
       </CardHeader>
       <CardContent>
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search parameters..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-6">
-          {headers.map((header) => (
+          {filteredHeaders.map((header) => (
             <div 
               key={header} 
               className="flex items-center space-x-2 p-2 rounded hover:bg-gray-50 cursor-pointer"
@@ -78,6 +106,10 @@ const ParameterSelection: React.FC<ParameterSelectionProps> = ({
             </div>
           ))}
         </div>
+
+        {filteredHeaders.length === 0 && (
+          <p className="text-center text-gray-500 py-4">No matching parameters found</p>
+        )}
 
         <div className="mt-4">
           <p className="text-sm font-medium mb-2">Selected Parameters:</p>
