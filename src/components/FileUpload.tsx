@@ -1,10 +1,14 @@
+
 import React, { useCallback, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, ArrowRight, Check } from 'lucide-react';
+import { Upload, FileText, ArrowRight, Check, Settings, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { parseExcelFile, ExcelData } from '../utils/excelParser';
+import { ExcelData } from '../utils/excelParser';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { uploadFile } from '../services/apiService';
+import ServerConfig from './ServerConfig';
+import { configStore } from '../utils/configStore';
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
@@ -18,6 +22,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [parsedData, setParsedData] = useState<ExcelData | null>(null);
+  const [showConfig, setShowConfig] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   const handleFile = useCallback(async (file: File) => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
@@ -32,20 +38,28 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
     setFileName(file.name);
     setIsProcessing(true);
     setUploadSuccess(false);
+    setUploadError(null);
     
     try {
-      const data = await parseExcelFile(file);
-      setParsedData(data);
+      // Upload file to server
+      const response = await uploadFile(file);
+      
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      
+      setParsedData(response.data.excelData);
       setUploadSuccess(true);
       toast({
         title: "File uploaded successfully",
-        description: `Processed ${data.rows.length} rows with ${data.headers.length} columns`,
+        description: `Processed ${response.data.excelData.rows.length} rows with ${response.data.excelData.headers.length} columns`,
       });
     } catch (error) {
       console.error('Error processing file:', error);
+      setUploadError(error instanceof Error ? error.message : "Unknown error occurred");
       toast({
         title: "Error processing file",
-        description: "There was an error reading the Excel file",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive"
       });
     } finally {
@@ -83,10 +97,26 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
       handleFile(e.target.files[0]);
     }
   }, [handleFile]);
+
+  if (showConfig) {
+    return <ServerConfig onClose={() => setShowConfig(false)} />;
+  }
   
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
+        <div className="flex justify-end mb-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowConfig(true)}
+            className="flex items-center gap-1"
+          >
+            <Settings className="h-4 w-4" />
+            Server Config
+          </Button>
+        </div>
+        
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
@@ -111,8 +141,12 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
                   <p className="font-medium text-gray-900">{fileName}</p>
                   {isProcessing ? (
                     <p className="text-sm text-gray-500">Processing file...</p>
+                  ) : uploadSuccess ? (
+                    <p className="text-sm text-green-500">File uploaded successfully</p>
+                  ) : uploadError ? (
+                    <p className="text-sm text-red-500">Upload failed: {uploadError}</p>
                   ) : (
-                    <p className="text-sm text-green-500">File uploaded</p>
+                    <p className="text-sm text-gray-500">File selected</p>
                   )}
                 </>
               ) : (
@@ -122,6 +156,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
                     <p className="font-medium text-gray-900">Drag and drop your Excel file here</p>
                     <p className="text-sm text-gray-500">or click to browse files</p>
                     <p className="text-xs text-gray-400">(Supported formats: .xlsx, .xls)</p>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    Files will be uploaded to: {configStore.getApiUrl()}/upload
                   </div>
                 </>
               )}
@@ -134,7 +171,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
             <Alert className="bg-green-50 border-green-200">
               <Check className="h-4 w-4 text-green-500" />
               <AlertDescription className="text-green-700">
-                Excel file successfully uploaded and parsed! {parsedData?.rows.length} rows are ready for processing.
+                Excel file successfully uploaded and processed! {parsedData?.rows.length} rows are ready for processing.
               </AlertDescription>
             </Alert>
             
@@ -148,8 +185,19 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
             </div>
           </div>
         )}
+
+        {uploadError && (
+          <div className="mt-4">
+            <Alert className="bg-red-50 border-red-200">
+              <X className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-red-700">
+                {uploadError}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )}
         
-        {fileName && !isProcessing && !uploadSuccess && (
+        {fileName && !isProcessing && !uploadSuccess && !uploadError && (
           <div className="mt-4 flex justify-center">
             <Button 
               variant="outline"
@@ -157,6 +205,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
                 setFileName(null);
                 setUploadSuccess(false);
                 setParsedData(null);
+                setUploadError(null);
                 document.getElementById('file-upload') && ((document.getElementById('file-upload') as HTMLInputElement).value = '');
               }}
             >

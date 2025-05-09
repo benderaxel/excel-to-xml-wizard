@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import FileUpload from '@/components/FileUpload';
 import DataPreview from '@/components/DataPreview';
@@ -7,11 +7,29 @@ import ParameterSelection from '@/components/ParameterSelection';
 import XmlOutput from '@/components/XmlOutput';
 import { ExcelData } from '@/utils/excelParser';
 import { ArrowDown } from 'lucide-react';
+import { checkServerHealth } from '@/services/apiService';
+import { configStore } from '@/utils/configStore';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
+  const [serverStatus, setServerStatus] = useState<boolean | null>(null);
+  
+  // Check server status on component mount
+  useEffect(() => {
+    const checkStatus = async () => {
+      const status = await checkServerHealth();
+      setServerStatus(status);
+    };
+    
+    checkStatus();
+    
+    // Recheck server status every 30 seconds
+    const interval = setInterval(checkStatus, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   const handleFileProcessed = (data: ExcelData) => {
     setExcelData(data);
@@ -32,8 +50,24 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm py-6">
         <div className="container mx-auto px-4">
-          <h1 className="text-2xl font-bold text-gray-900">Excel to XML Wizard</h1>
-          <p className="text-gray-500 mt-1">Convert Excel data to structured XML format</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Excel to XML Wizard</h1>
+              <p className="text-gray-500 mt-1">Convert Excel data to structured XML format</p>
+            </div>
+            <div className="flex items-center">
+              <span className="text-sm mr-2">Server:</span>
+              <div className={`w-3 h-3 rounded-full ${
+                serverStatus === null ? 'bg-gray-400' : 
+                serverStatus ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className="ml-2 text-sm text-gray-600">
+                {serverStatus === null ? 'Checking...' : 
+                 serverStatus ? `Connected to ${configStore.getApiUrl()}` : 
+                 'Disconnected'}
+              </span>
+            </div>
+          </div>
         </div>
       </header>
       
@@ -120,7 +154,7 @@ const Index = () => {
       
       <footer className="bg-white border-t py-6 mt-12">
         <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-          Excel to XML Wizard &copy; 2023
+          Excel to XML Wizard &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>
