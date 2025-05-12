@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,12 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [healthStatus, setHealthStatus] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<string>(ngrokUrl ? 'ngrok' : 'direct');
+
+  useEffect(() => {
+    // Initialize health status based on current configuration
+    const isHealthy = activeTab === 'ngrok' ? ngrokUrl : serverUrl;
+    setHealthStatus(isHealthy);
+  }, [activeTab, ngrokUrl, serverUrl]);
 
   const handleSave = async () => {
     // Update configuration based on the active tab
@@ -63,6 +68,13 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        <Alert className="bg-blue-50 border-blue-200 mb-4">
+          <AlertDescription className="text-blue-700">
+            <strong>Docker Mode:</strong> The app is configured to automatically connect to the API proxy when running in Docker.
+            If you're using Docker, the API proxy will forward requests to the Mercedes container at port 8000.
+          </AlertDescription>
+        </Alert>
+        
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-3 mb-4">
             <TabsTrigger value="direct">Direct Connection</TabsTrigger>
@@ -73,7 +85,7 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
           <TabsContent value="direct" className="space-y-4">
             <Alert className="bg-gray-50 border-gray-200 mb-4">
               <AlertDescription className="text-gray-700">
-                Use direct connection to a local server when running both frontend and backend locally.
+                Use direct connection to a local server or API proxy when running outside of Docker.
               </AlertDescription>
             </Alert>
             
@@ -93,8 +105,11 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
                 id="server-port" 
                 value={serverPort}
                 onChange={(e) => setServerPort(e.target.value)}
-                placeholder="3001"
+                placeholder="8081"
               />
+              <p className="text-xs text-gray-500">
+                Default port is 8081 for the API proxy (which forwards to Mercedes at port 8000)
+              </p>
             </div>
           </TabsContent>
           
@@ -144,7 +159,7 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
                 id="server-port" 
                 value={serverPort}
                 onChange={(e) => setServerPort(e.target.value)}
-                placeholder="3001"
+                placeholder="8081"
               />
             </div>
             

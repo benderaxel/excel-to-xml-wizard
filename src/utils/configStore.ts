@@ -11,7 +11,7 @@ type ConfigStore = {
 // Default configuration
 const defaultConfig: ConfigStore = {
   serverUrl: 'http://localhost',
-  serverPort: '3001',
+  serverPort: '8081', // Point to our proxy server instead of Mercedes directly
   ngrokUrl: '',
   corsProxy: '',
   getApiUrl: function() {
@@ -26,16 +26,15 @@ const defaultConfig: ConfigStore = {
     }
     
     // Default: use direct server URL with port
-    // When running in Docker on WSL2, we need to use the host.docker.internal hostname
-    // to access services on the host machine
+    // When running in Docker, we connect to the API proxy container
     const isDockerEnvironment = window.location.hostname === 'localhost' && 
                                window.location.port === '8080';
                                
-    if (isDockerEnvironment && this.serverUrl === 'http://localhost') {
-      return `http://host.docker.internal:${this.serverPort}`;
+    if (isDockerEnvironment) {
+      return `http://localhost:8081/api`;
     }
     
-    return `${this.serverUrl}:${this.serverPort}`;
+    return `${this.serverUrl}:${this.serverPort}/api`;
   }
 };
 

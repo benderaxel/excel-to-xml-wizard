@@ -52,6 +52,27 @@ export const uploadFile = async (file: File): Promise<ServerResponse> => {
 
 export const checkServerHealth = async (): Promise<boolean> => {
   try {
+    // First check our proxy health
+    const proxyHealthUrl = window.location.port === '8080' 
+      ? 'http://localhost:8081/proxy-health'
+      : `${configStore.serverUrl}:${configStore.serverPort}/proxy-health`;
+      
+    try {
+      const proxyResponse = await fetch(proxyHealthUrl, {
+        mode: 'cors',
+        credentials: 'include',
+      });
+      
+      if (proxyResponse.ok) {
+        console.log('API Proxy is healthy');
+      } else {
+        console.warn('API Proxy health check failed');
+      }
+    } catch (proxyError) {
+      console.warn('Could not reach API proxy:', proxyError);
+    }
+    
+    // Now check the actual Mercedes API health
     const apiUrl = `${configStore.getApiUrl()}/health`;
     console.log(`Checking server health at: ${apiUrl}`);
     
