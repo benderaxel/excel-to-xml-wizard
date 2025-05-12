@@ -9,6 +9,7 @@ import { configStore, updateServerConfig } from '../utils/configStore';
 import { checkServerHealth } from '../services/apiService';
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ServerConfigProps {
   onClose: () => void;
@@ -18,12 +19,20 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
   const { toast } = useToast();
   const [serverUrl, setServerUrl] = useState(configStore.serverUrl);
   const [serverPort, setServerPort] = useState(configStore.serverPort);
+  const [ngrokUrl, setNgrokUrl] = useState(configStore.ngrokUrl || '');
   const [corsProxy, setCorsProxy] = useState(configStore.corsProxy || '');
   const [isCheckingHealth, setIsCheckingHealth] = useState(false);
   const [healthStatus, setHealthStatus] = useState<boolean | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(ngrokUrl ? 'ngrok' : 'direct');
 
   const handleSave = async () => {
-    updateServerConfig(serverUrl, serverPort, corsProxy);
+    // Update configuration based on the active tab
+    updateServerConfig(
+      serverUrl, 
+      serverPort,
+      activeTab === 'ngrok' ? ngrokUrl : '',
+      activeTab === 'cors' ? corsProxy : ''
+    );
     
     setIsCheckingHealth(true);
     const isHealthy = await checkServerHealth();
@@ -39,7 +48,7 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
     } else {
       toast({
         title: "Server connection failed",
-        description: "Could not connect to server. Check URL, port, and CORS settings.",
+        description: "Could not connect to server. Check your configuration settings.",
         variant: "destructive"
       });
     }
@@ -54,45 +63,105 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Alert className="bg-yellow-50 border-yellow-200 mb-4">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <AlertDescription className="text-yellow-700">
-            If you're connecting to a local backend from the hosted Lovable app, you may need to use a CORS proxy.
-          </AlertDescription>
-        </Alert>
-        
-        <div className="space-y-2">
-          <Label htmlFor="server-url">Server URL</Label>
-          <Input 
-            id="server-url" 
-            value={serverUrl}
-            onChange={(e) => setServerUrl(e.target.value)}
-            placeholder="http://localhost"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="server-port">Server Port</Label>
-          <Input 
-            id="server-port" 
-            value={serverPort}
-            onChange={(e) => setServerPort(e.target.value)}
-            placeholder="3001"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="cors-proxy">CORS Proxy (optional)</Label>
-          <Input 
-            id="cors-proxy" 
-            value={corsProxy}
-            onChange={(e) => setCorsProxy(e.target.value)}
-            placeholder="https://cors-anywhere.herokuapp.com/"
-          />
-          <p className="text-xs text-gray-500">
-            Example: https://cors-anywhere.herokuapp.com/ or https://corsproxy.io/?
-          </p>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid grid-cols-3 mb-4">
+            <TabsTrigger value="direct">Direct Connection</TabsTrigger>
+            <TabsTrigger value="ngrok">Ngrok Forwarding</TabsTrigger>
+            <TabsTrigger value="cors">CORS Proxy</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="direct" className="space-y-4">
+            <Alert className="bg-gray-50 border-gray-200 mb-4">
+              <AlertDescription className="text-gray-700">
+                Use direct connection to a local server when running both frontend and backend locally.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-2">
+              <Label htmlFor="server-url">Server URL</Label>
+              <Input 
+                id="server-url" 
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
+                placeholder="http://localhost"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="server-port">Server Port</Label>
+              <Input 
+                id="server-port" 
+                value={serverPort}
+                onChange={(e) => setServerPort(e.target.value)}
+                placeholder="3001"
+              />
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="ngrok" className="space-y-4">
+            <Alert className="bg-blue-50 border-blue-200 mb-4">
+              <AlertDescription className="text-blue-700">
+                Use ngrok URL when connecting to a server behind a firewall or running in WSL.
+                Example: https://8695-109-205-220-22.ngrok-free.app
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-2">
+              <Label htmlFor="ngrok-url">Ngrok URL</Label>
+              <Input 
+                id="ngrok-url" 
+                value={ngrokUrl}
+                onChange={(e) => setNgrokUrl(e.target.value)}
+                placeholder="https://8695-109-205-220-22.ngrok-free.app"
+              />
+              <p className="text-xs text-gray-500">
+                Enter the full ngrok URL without the port number
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="cors" className="space-y-4">
+            <Alert className="bg-yellow-50 border-yellow-200 mb-4">
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertDescription className="text-yellow-700">
+                Use a CORS proxy when connecting to a local backend from the hosted Lovable app.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="space-y-2">
+              <Label htmlFor="server-url">Server URL</Label>
+              <Input 
+                id="server-url" 
+                value={serverUrl}
+                onChange={(e) => setServerUrl(e.target.value)}
+                placeholder="http://localhost"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="server-port">Server Port</Label>
+              <Input 
+                id="server-port" 
+                value={serverPort}
+                onChange={(e) => setServerPort(e.target.value)}
+                placeholder="3001"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="cors-proxy">CORS Proxy URL</Label>
+              <Input 
+                id="cors-proxy" 
+                value={corsProxy}
+                onChange={(e) => setCorsProxy(e.target.value)}
+                placeholder="https://cors-anywhere.herokuapp.com/"
+              />
+              <p className="text-xs text-gray-500">
+                Example: https://cors-anywhere.herokuapp.com/ or https://corsproxy.io/?
+              </p>
+            </div>
+          </TabsContent>
+        </Tabs>
         
         {healthStatus !== null && (
           <div className={`flex items-center gap-2 text-sm ${healthStatus ? 'text-green-600' : 'text-red-600'}`}>
@@ -116,7 +185,10 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
           </Button>
           <Button 
             onClick={handleSave}
-            disabled={isCheckingHealth || !serverUrl || !serverPort}
+            disabled={isCheckingHealth || 
+              (activeTab === 'direct' && (!serverUrl || !serverPort)) || 
+              (activeTab === 'ngrok' && !ngrokUrl) || 
+              (activeTab === 'cors' && (!serverUrl || !serverPort || !corsProxy))}
           >
             {isCheckingHealth ? 'Testing Connection...' : 'Save & Test Connection'}
           </Button>

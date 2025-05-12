@@ -76,3 +76,69 @@ export const checkServerHealth = async (): Promise<boolean> => {
     return false;
   }
 };
+
+export const ingestLocalData = async (): Promise<ServerResponse> => {
+  try {
+    const apiUrl = `${configStore.getApiUrl()}/ingest`;
+    console.log(`Ingesting local data from: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      message: "Local data ingested successfully",
+      data: result,
+      statusCode: response.status
+    };
+  } catch (error) {
+    console.error('Ingest error:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred during ingestion"
+    };
+  }
+};
+
+export const queryDataGraph = async (query: string): Promise<ServerResponse> => {
+  try {
+    const apiUrl = `${configStore.getApiUrl()}/query?q=${encodeURIComponent(query)}`;
+    console.log(`Querying data graph at: ${apiUrl}`);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    return {
+      success: true,
+      message: "Query executed successfully",
+      data: result,
+      statusCode: response.status
+    };
+  } catch (error) {
+    console.error('Query error:', error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Unknown error occurred during query"
+    };
+  }
+};

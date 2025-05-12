@@ -6,15 +6,17 @@ import DataPreview from '@/components/DataPreview';
 import ParameterSelection from '@/components/ParameterSelection';
 import XmlOutput from '@/components/XmlOutput';
 import { ExcelData } from '@/utils/excelParser';
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, Server, Cog } from 'lucide-react';
 import { checkServerHealth } from '@/services/apiService';
 import { configStore } from '@/utils/configStore';
+import ServerConfig from '@/components/ServerConfig';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   
   // Check server status on component mount
   useEffect(() => {
@@ -45,6 +47,16 @@ const Index = () => {
       setCurrentStep(3);
     }
   };
+
+  const getConnectionInfo = () => {
+    if (configStore.ngrokUrl) {
+      return `Connected to ngrok: ${configStore.ngrokUrl}`;
+    } else if (configStore.corsProxy) {
+      return `Connected via CORS proxy: ${configStore.getApiUrl()}`;
+    } else {
+      return `Connected to ${configStore.getApiUrl()}`;
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -55,21 +67,40 @@ const Index = () => {
               <h1 className="text-2xl font-bold text-gray-900">Excel to XML Wizard</h1>
               <p className="text-gray-500 mt-1">Convert Excel data to structured XML format</p>
             </div>
-            <div className="flex items-center">
-              <span className="text-sm mr-2">Server:</span>
-              <div className={`w-3 h-3 rounded-full ${
-                serverStatus === null ? 'bg-gray-400' : 
-                serverStatus ? 'bg-green-500' : 'bg-red-500'
-              }`}></div>
-              <span className="ml-2 text-sm text-gray-600">
-                {serverStatus === null ? 'Checking...' : 
-                 serverStatus ? `Connected to ${configStore.getApiUrl()}` : 
-                 'Disconnected'}
-              </span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center">
+                <span className="text-sm mr-2 hidden sm:inline">Server:</span>
+                <div className={`w-3 h-3 rounded-full ${
+                  serverStatus === null ? 'bg-gray-400' : 
+                  serverStatus ? 'bg-green-500' : 'bg-red-500'
+                }`}></div>
+                <span className="ml-2 text-sm text-gray-600 hidden sm:inline">
+                  {serverStatus === null ? 'Checking...' : 
+                   serverStatus ? getConnectionInfo() : 
+                   'Disconnected'}
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setShowConfigModal(true)}
+              >
+                <Cog className="h-4 w-4" />
+                <span className="hidden sm:inline">Server Config</span>
+              </Button>
             </div>
           </div>
         </div>
       </header>
+      
+      {showConfigModal ? (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full">
+            <ServerConfig onClose={() => setShowConfigModal(false)} />
+          </div>
+        </div>
+      ) : null}
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
@@ -92,6 +123,7 @@ const Index = () => {
             <FileUpload 
               onFileProcessed={handleFileProcessed} 
               onInitiateProcessing={initiateProcessing}
+              onShowConfig={() => setShowConfigModal(true)}
             />
           </section>
           

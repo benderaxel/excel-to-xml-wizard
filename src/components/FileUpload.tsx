@@ -2,27 +2,30 @@
 import React, { useCallback, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, ArrowRight, Check, Settings, X } from 'lucide-react';
+import { Upload, FileText, ArrowRight, Check, Settings, X, Server } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { ExcelData } from '../utils/excelParser';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { uploadFile } from '../services/apiService';
-import ServerConfig from './ServerConfig';
 import { configStore } from '../utils/configStore';
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
   onInitiateProcessing: () => void;
+  onShowConfig: () => void;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProcessing }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ 
+  onFileProcessed, 
+  onInitiateProcessing,
+  onShowConfig
+}) => {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [parsedData, setParsedData] = useState<ExcelData | null>(null);
-  const [showConfig, setShowConfig] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   
   const handleFile = useCallback(async (file: File) => {
@@ -98,9 +101,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
     }
   }, [handleFile]);
 
-  if (showConfig) {
-    return <ServerConfig onClose={() => setShowConfig(false)} />;
-  }
+  // Helper function to get connection type description
+  const getConnectionText = () => {
+    if (configStore.ngrokUrl) {
+      return `ngrok forwarding: ${configStore.ngrokUrl}/upload`;
+    } else if (configStore.corsProxy) {
+      return `CORS proxy: ${configStore.getApiUrl()}/upload`;
+    } else {
+      return `${configStore.getApiUrl()}/upload`;
+    }
+  };
   
   return (
     <Card className="w-full">
@@ -109,7 +119,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setShowConfig(true)}
+            onClick={onShowConfig}
             className="flex items-center gap-1"
           >
             <Settings className="h-4 w-4" />
@@ -157,8 +167,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileProcessed, onInitiateProc
                     <p className="text-sm text-gray-500">or click to browse files</p>
                     <p className="text-xs text-gray-400">(Supported formats: .xlsx, .xls)</p>
                   </div>
-                  <div className="text-xs text-gray-400 mt-2">
-                    Files will be uploaded to: {configStore.getApiUrl()}/upload
+                  <div className="flex items-center justify-center text-xs text-gray-400 mt-2">
+                    <Server className="h-3 w-3 mr-1" />
+                    <span>Server: {getConnectionText()}</span>
                   </div>
                 </>
               )}
