@@ -26,6 +26,15 @@ const defaultConfig: ConfigStore = {
     }
     
     // Default: use direct server URL with port
+    // When running in Docker on WSL2, we need to use the host.docker.internal hostname
+    // to access services on the host machine
+    const isDockerEnvironment = window.location.hostname === 'localhost' && 
+                               window.location.port === '8080';
+                               
+    if (isDockerEnvironment && this.serverUrl === 'http://localhost') {
+      return `http://host.docker.internal:${this.serverPort}`;
+    }
+    
     return `${this.serverUrl}:${this.serverPort}`;
   }
 };
