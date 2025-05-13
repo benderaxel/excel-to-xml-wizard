@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,8 +27,9 @@ const ServerConfig: React.FC<ServerConfigProps> = ({ onClose }) => {
 
   useEffect(() => {
     // Initialize health status based on current configuration
-    const isHealthy = activeTab === 'ngrok' ? ngrokUrl : serverUrl;
-    setHealthStatus(isHealthy);
+    // Fix: Convert string to boolean using Boolean() instead of directly assigning
+    const hasConfig = activeTab === 'ngrok' ? Boolean(ngrokUrl) : Boolean(serverUrl);
+    setHealthStatus(hasConfig ? null : false);
   }, [activeTab, ngrokUrl, serverUrl]);
 
   const handleSave = async () => {

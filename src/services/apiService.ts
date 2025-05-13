@@ -20,17 +20,30 @@ export const uploadFile = async (file: File): Promise<ServerResponse> => {
     const response = await fetch(apiUrl, {
       method: 'POST',
       body: formData,
-      // Add CORS mode and credentials
+      // Important: Don't set Content-Type header when sending FormData
+      // The browser will automatically set it with the correct boundary
       mode: 'cors',
       credentials: 'include',
     });
+    
+    console.log('Upload response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Server responded with ${response.status}: ${errorText}`);
     }
     
-    const result = await response.json();
+    // Parse the server response
+    let result;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      // Handle non-JSON responses
+      const text = await response.text();
+      console.log('Response is not JSON:', text);
+      result = { message: text };
+    }
     
     // Also parse the Excel file locally for preview
     const data = await parseExcelFile(file);
