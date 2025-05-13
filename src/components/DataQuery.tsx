@@ -4,15 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Database, Search } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { queryDataGraph } from '../services/apiService';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 
 const DEFAULT_BUILD_LINE = "254";
 const DEFAULT_MARKET = "USA/CND";
 const DEFAULT_GRAPH_PROPERTY = "H101 Fahrzeughöhe (M1 ~ ff) (mm)";
+
+interface TableData {
+  headers: string[];
+  rows: Record<string, string>[];
+}
 
 const DataQuery: React.FC = () => {
   const { toast } = useToast();
@@ -20,8 +25,40 @@ const DataQuery: React.FC = () => {
   const [market, setMarket] = useState(DEFAULT_MARKET);
   const [graphProperty, setGraphProperty] = useState(DEFAULT_GRAPH_PROPERTY);
   const [isQuerying, setIsQuerying] = useState(false);
-  const [queryResult, setQueryResult] = useState<any>(null);
+  const [queryResult, setQueryResult] = useState<TableData | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
+  
+  const parseXmlTable = (xmlString: string): TableData => {
+    // Create a simple XML parser
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    
+    // Extract headers
+    const headers: string[] = [];
+    const headerEntries = xmlDoc.querySelectorAll('thead entry');
+    headerEntries.forEach(entry => {
+      headers.push(entry.textContent || '');
+    });
+    
+    // Extract rows
+    const rows: Record<string, string>[] = [];
+    const rowElements = xmlDoc.querySelectorAll('tbody row');
+    
+    rowElements.forEach(rowElement => {
+      const row: Record<string, string> = {};
+      const entries = rowElement.querySelectorAll('entry');
+      
+      entries.forEach((entry, index) => {
+        if (index < headers.length) {
+          row[headers[index]] = entry.textContent || '';
+        }
+      });
+      
+      rows.push(row);
+    });
+    
+    return { headers, rows };
+  };
   
   const handleQuery = async () => {
     setIsQuerying(true);
@@ -36,10 +73,13 @@ const DataQuery: React.FC = () => {
         throw new Error(response.message);
       }
       
-      setQueryResult(response.data);
+      // Parse the XML table data
+      const tableData = parseXmlTable(response.data);
+      setQueryResult(tableData);
+      
       toast({
         title: "Query executed successfully",
-        description: "Data retrieved from the graph database",
+        description: `Retrieved ${tableData.rows.length} rows from the database`,
       });
     } catch (error) {
       console.error('Query error:', error);
@@ -65,7 +105,7 @@ const DataQuery: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" /> 
-          Data Graph Query
+          Select Data
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -125,16 +165,36 @@ const DataQuery: React.FC = () => {
           </Alert>
         )}
         
-        {queryResult && (
-          <div className="mt-4">
-            <Label htmlFor="result" className="mb-2 block">Query Result</Label>
-            <Textarea
-              id="result"
-              className="font-mono h-64"
-              readOnly
-              value={JSON.stringify(queryResult, null, 2)}
-            />
+        {queryResult && queryResult.rows.length > 0 && (
+          <div className="mt-6 overflow-x-auto">
+            <h3 className="text-lg font-medium mb-2">Query Results</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {queryResult.headers.map((header, index) => (
+                    <TableHead key={index}>{header}</TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {queryResult.rows.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {queryResult.headers.map((header, cellIndex) => (
+                      <TableCell key={cellIndex}>{row[header]}</TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
+        )}
+        
+        {queryResult && queryResult.rows.length === 0 && (
+          <Alert className="mt-4">
+            <AlertDescription>
+              No results found for the given query parameters.
+            </AlertDescription>
+          </Alert>
         )}
       </CardContent>
     </Card>

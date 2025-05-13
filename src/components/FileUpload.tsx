@@ -59,6 +59,11 @@ const FileUpload: React.FC<FileUploadProps> = ({
         title: "File uploaded successfully",
         description: `Processed ${response.data.excelData.rows.length} rows with ${response.data.excelData.headers.length} columns`,
       });
+      
+      // After successful upload (200 OK), move to state 2
+      if (response.statusCode === 200) {
+        onFileProcessed(response.data.excelData);
+      }
     } catch (error) {
       console.error('Error processing file:', error);
       setUploadError(error instanceof Error ? error.message : "Unknown error occurred");
@@ -70,9 +75,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
     } finally {
       setIsProcessing(false);
     }
-  }, [toast]);
+  }, [toast, onFileProcessed]);
 
-  const handleIngestLocalData = async () => {
+  const handleProcessData = async () => {
     setIsIngesting(true);
     
     try {
@@ -83,25 +88,23 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
       
       toast({
-        title: "Local data ingested successfully",
+        title: "Data processed successfully",
         description: response.message,
       });
+      
+      // After successful processing (200 OK), move to state 3
+      if (response.statusCode === 200) {
+        onInitiateProcessing();
+      }
     } catch (error) {
-      console.error('Error ingesting local data:', error);
+      console.error('Error processing data:', error);
       toast({
-        title: "Error ingesting local data",
+        title: "Error processing data",
         description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive"
       });
     } finally {
       setIsIngesting(false);
-    }
-  };
-  
-  const handleProcessData = () => {
-    if (parsedData) {
-      onFileProcessed(parsedData);
-      onInitiateProcessing();
     }
   };
   
@@ -207,13 +210,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
         
         <div className="mt-4">
           <Button
-            onClick={handleIngestLocalData}
-            disabled={isIngesting}
+            onClick={handleProcessData}
+            disabled={isIngesting || !uploadSuccess}
             variant="secondary"
             className="w-full flex items-center justify-center gap-2 mb-4"
           >
             <Database className="h-4 w-4" />
-            {isIngesting ? "Ingesting..." : "Ingest Local Data"}
+            {isIngesting ? "Processing..." : "Process Data"}
           </Button>
         </div>
         
@@ -225,15 +228,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
                 Excel file successfully uploaded and processed! {parsedData?.rows.length} rows are ready for processing.
               </AlertDescription>
             </Alert>
-            
-            <div className="flex justify-center">
-              <Button 
-                onClick={handleProcessData}
-                className="gap-2"
-              >
-                Process <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         )}
 

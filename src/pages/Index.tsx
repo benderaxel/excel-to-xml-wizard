@@ -39,10 +39,11 @@ const Index = () => {
   const handleFileProcessed = (data: ExcelData) => {
     setExcelData(data);
     setSelectedParameters([]); // Reset selected parameters
+    setCurrentStep(2); // Move to step 2 after successful upload
   };
   
-  const initiateProcessing = () => {
-    setCurrentStep(2);
+  const handleProcessData = () => {
+    setCurrentStep(3); // Move to step 3 after clicking "Process Data"
   };
   
   const proceedToXmlGeneration = () => {
@@ -115,7 +116,7 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="query" className="flex items-center gap-2">
                 <Database className="h-4 w-4" />
-                Data Query
+                Select Data
               </TabsTrigger>
             </TabsList>
             
@@ -138,7 +139,7 @@ const Index = () => {
                 <h2 className="text-xl font-semibold mb-4">Step 1: Upload Excel File</h2>
                 <FileUpload 
                   onFileProcessed={handleFileProcessed} 
-                  onInitiateProcessing={initiateProcessing}
+                  onInitiateProcessing={handleProcessData}
                   onShowConfig={() => setShowConfigModal(true)}
                 />
               </section>
