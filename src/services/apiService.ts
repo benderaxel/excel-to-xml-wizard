@@ -146,7 +146,7 @@ export const ingestLocalData = async (): Promise<ServerResponse> => {
 
 export const queryDataGraph = async (query: string): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/query?q=${encodeURIComponent(query)}`;
+    const apiUrl = `${configStore.getApiUrl()}/query?${query}`;
     console.log(`Querying data graph at: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {

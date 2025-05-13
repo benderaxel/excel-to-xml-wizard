@@ -2,11 +2,11 @@
 import React, { useCallback, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, ArrowRight, Check, Settings, X, Server } from 'lucide-react';
+import { Upload, FileText, ArrowRight, Check, Settings, X, Server, Database } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { ExcelData } from '../utils/excelParser';
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { uploadFile } from '../services/apiService';
+import { uploadFile, ingestLocalData } from '../services/apiService';
 import { configStore } from '../utils/configStore';
 
 interface FileUploadProps {
@@ -23,6 +23,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isIngesting, setIsIngesting] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [parsedData, setParsedData] = useState<ExcelData | null>(null);
@@ -46,6 +47,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     try {
       // Upload file to server
       const response = await uploadFile(file);
+      console.log("Upload response:", response);
       
       if (!response.success) {
         throw new Error(response.message);
@@ -69,6 +71,32 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setIsProcessing(false);
     }
   }, [toast]);
+
+  const handleIngestLocalData = async () => {
+    setIsIngesting(true);
+    
+    try {
+      const response = await ingestLocalData();
+      
+      if (!response.success) {
+        throw new Error(response.message);
+      }
+      
+      toast({
+        title: "Local data ingested successfully",
+        description: response.message,
+      });
+    } catch (error) {
+      console.error('Error ingesting local data:', error);
+      toast({
+        title: "Error ingesting local data",
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setIsIngesting(false);
+    }
+  };
   
   const handleProcessData = () => {
     if (parsedData) {
@@ -175,6 +203,18 @@ const FileUpload: React.FC<FileUploadProps> = ({
               )}
             </div>
           </label>
+        </div>
+        
+        <div className="mt-4">
+          <Button
+            onClick={handleIngestLocalData}
+            disabled={isIngesting}
+            variant="secondary"
+            className="w-full flex items-center justify-center gap-2 mb-4"
+          >
+            <Database className="h-4 w-4" />
+            {isIngesting ? "Ingesting..." : "Ingest Local Data"}
+          </Button>
         </div>
         
         {uploadSuccess && (

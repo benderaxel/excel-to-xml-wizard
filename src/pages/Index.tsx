@@ -5,11 +5,13 @@ import FileUpload from '@/components/FileUpload';
 import DataPreview from '@/components/DataPreview';
 import ParameterSelection from '@/components/ParameterSelection';
 import XmlOutput from '@/components/XmlOutput';
+import DataQuery from '@/components/DataQuery';
 import { ExcelData } from '@/utils/excelParser';
-import { ArrowDown, Server, Cog } from 'lucide-react';
+import { ArrowDown, Server, Cog, Database } from 'lucide-react';
 import { checkServerHealth } from '@/services/apiService';
 import { configStore } from '@/utils/configStore';
 import ServerConfig from '@/components/ServerConfig';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -17,6 +19,7 @@ const Index = () => {
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<"excel" | "query">("excel");
   
   // Check server status on component mount
   useEffect(() => {
@@ -104,83 +107,102 @@ const Index = () => {
       
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center mb-8">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'}`}>
-              1
-            </div>
-            <div className={`h-0.5 flex-1 ${currentStep > 1 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}>
-              2
-            </div>
-            <div className={`h-0.5 flex-1 ${currentStep > 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'}`}>
-              3
-            </div>
-          </div>
-          
-          <section className={`mb-8 ${currentStep === 1 ? 'block' : 'hidden'}`}>
-            <h2 className="text-xl font-semibold mb-4">Step 1: Upload Excel File</h2>
-            <FileUpload 
-              onFileProcessed={handleFileProcessed} 
-              onInitiateProcessing={initiateProcessing}
-              onShowConfig={() => setShowConfigModal(true)}
-            />
-          </section>
-          
-          {excelData && (
-            <>
-              <section className={`mb-8 ${currentStep === 2 ? 'block' : 'hidden'}`}>
-                <h2 className="text-xl font-semibold mb-4">Step 2: Select Parameters</h2>
-                <div className="space-y-6">
-                  <DataPreview data={excelData} />
-                  
-                  <div className="flex justify-center">
-                    <ArrowDown className="text-gray-400" />
-                  </div>
-                  
-                  <ParameterSelection
-                    headers={excelData.headers}
-                    selectedParameters={selectedParameters}
-                    setSelectedParameters={setSelectedParameters}
-                  />
-                  
-                  <div className="flex justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setCurrentStep(1)}
-                    >
-                      Back to Upload
-                    </Button>
-                    <Button 
-                      onClick={proceedToXmlGeneration}
-                      disabled={selectedParameters.length === 0}
-                    >
-                      Generate XML
-                    </Button>
-                  </div>
+          <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as "excel" | "query")} className="w-full mb-8">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="excel" className="flex items-center gap-2">
+                <ArrowDown className="h-4 w-4" />
+                Excel Processing
+              </TabsTrigger>
+              <TabsTrigger value="query" className="flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                Data Query
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="excel" className="mt-6">
+              <div className="flex items-center mb-8">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                  1
                 </div>
+                <div className={`h-0.5 flex-1 ${currentStep > 1 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                  2
+                </div>
+                <div className={`h-0.5 flex-1 ${currentStep > 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                  3
+                </div>
+              </div>
+              
+              <section className={`mb-8 ${currentStep === 1 ? 'block' : 'hidden'}`}>
+                <h2 className="text-xl font-semibold mb-4">Step 1: Upload Excel File</h2>
+                <FileUpload 
+                  onFileProcessed={handleFileProcessed} 
+                  onInitiateProcessing={initiateProcessing}
+                  onShowConfig={() => setShowConfigModal(true)}
+                />
               </section>
               
-              <section className={`mb-8 ${currentStep === 3 ? 'block' : 'hidden'}`}>
-                <h2 className="text-xl font-semibold mb-4">Step 3: XML Output</h2>
-                <div className="space-y-6">
-                  <XmlOutput 
-                    data={excelData}
-                    selectedParameters={selectedParameters}
-                  />
+              {excelData && (
+                <>
+                  <section className={`mb-8 ${currentStep === 2 ? 'block' : 'hidden'}`}>
+                    <h2 className="text-xl font-semibold mb-4">Step 2: Select Parameters</h2>
+                    <div className="space-y-6">
+                      <DataPreview data={excelData} />
+                      
+                      <div className="flex justify-center">
+                        <ArrowDown className="text-gray-400" />
+                      </div>
+                      
+                      <ParameterSelection
+                        headers={excelData.headers}
+                        selectedParameters={selectedParameters}
+                        setSelectedParameters={setSelectedParameters}
+                      />
+                      
+                      <div className="flex justify-between">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setCurrentStep(1)}
+                        >
+                          Back to Upload
+                        </Button>
+                        <Button 
+                          onClick={proceedToXmlGeneration}
+                          disabled={selectedParameters.length === 0}
+                        >
+                          Generate XML
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
                   
-                  <div className="flex justify-between">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setCurrentStep(2)}
-                    >
-                      Back to Parameters
-                    </Button>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
+                  <section className={`mb-8 ${currentStep === 3 ? 'block' : 'hidden'}`}>
+                    <h2 className="text-xl font-semibold mb-4">Step 3: XML Output</h2>
+                    <div className="space-y-6">
+                      <XmlOutput 
+                        data={excelData}
+                        selectedParameters={selectedParameters}
+                      />
+                      
+                      <div className="flex justify-between">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setCurrentStep(2)}
+                        >
+                          Back to Parameters
+                        </Button>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="query" className="mt-6">
+              <DataQuery />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       
