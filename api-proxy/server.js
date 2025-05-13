@@ -6,9 +6,9 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 const port = 8081;
 
-// Enable CORS for all requests
+// Enable CORS for all requests with specific origin (not wildcard)
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://frontend:8080'],
+  origin: 'http://localhost:8080',  // Replace wildcard with specific origin
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS']
 }));
@@ -40,6 +40,10 @@ const mercedesProxy = createProxyMiddleware({
     }
   },
   onProxyRes: (proxyRes, req, res) => {
+    // Add CORS headers to proxy responses
+    proxyRes.headers['Access-Control-Allow-Origin'] = 'http://localhost:8080';
+    proxyRes.headers['Access-Control-Allow-Credentials'] = 'true';
+    
     // Log response for debugging
     if (req.method === 'POST' && req.url.includes('/upload')) {
       console.log(`Proxy response status: ${proxyRes.statusCode}`);

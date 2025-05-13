@@ -22,8 +22,8 @@ export const uploadFile = async (file: File): Promise<ServerResponse> => {
       body: formData,
       // Important: Don't set Content-Type header when sending FormData
       // The browser will automatically set it with the correct boundary
-      mode: 'cors',
       credentials: 'include',
+      mode: 'cors',
     });
     
     console.log('Upload response status:', response.status);
@@ -73,7 +73,7 @@ export const checkServerHealth = async (): Promise<boolean> => {
     try {
       const proxyResponse = await fetch(proxyHealthUrl, {
         mode: 'cors',
-        credentials: 'include',
+        credentials: 'omit',  // Change from 'include' to 'omit' for proxy health check
       });
       
       if (proxyResponse.ok) {
@@ -90,9 +90,8 @@ export const checkServerHealth = async (): Promise<boolean> => {
     console.log(`Checking server health at: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
-      // Add CORS mode and credentials
+      credentials: 'omit',  // Change from 'include' to 'omit' for health check
       mode: 'cors',
-      credentials: 'include',
     });
     
     console.log(`Health check response status: ${response.status}`);
@@ -119,7 +118,7 @@ export const ingestLocalData = async (): Promise<ServerResponse> => {
     const response = await fetch(apiUrl, {
       method: 'GET',
       mode: 'cors',
-      credentials: 'include',
+      credentials: 'omit',  // Change from 'include' to 'omit'
     });
     
     if (!response.ok) {
@@ -152,7 +151,7 @@ export const queryDataGraph = async (query: string): Promise<ServerResponse> => 
     const response = await fetch(apiUrl, {
       method: 'GET',
       mode: 'cors',
-      credentials: 'include',
+      credentials: 'omit',  // Change from 'include' to 'omit'
     });
     
     if (!response.ok) {
