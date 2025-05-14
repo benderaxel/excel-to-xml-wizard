@@ -8,10 +8,11 @@ import XmlOutput from '@/components/XmlOutput';
 import DataQuery from '@/components/DataQuery';
 import { ExcelData } from '@/utils/excelParser';
 import { ArrowDown, Server, Cog, Database } from 'lucide-react';
-import { checkServerHealth } from '@/services/apiService';
+import { checkServerHealth, ingestLocalData } from '@/services/apiService';
 import { configStore } from '@/utils/configStore';
 import ServerConfig from '@/components/ServerConfig';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -20,6 +21,7 @@ const Index = () => {
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<"excel" | "query">("excel");
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   // Check server status on component mount
   useEffect(() => {
@@ -42,8 +44,33 @@ const Index = () => {
     setCurrentStep(2); // Move to step 2 after successful upload
   };
   
-  const handleProcessData = () => {
-    setCurrentStep(3); // Move to step 3 after clicking "Process Data"
+  const handleProcessData = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await ingestLocalData();
+      if (response.success) {
+        setCurrentStep(3); // Move to step 3 after successful processing
+        toast({
+          title: "Success",
+          description: "Data processed successfully",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to process data",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+      console.error("Process data error:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   const proceedToXmlGeneration = () => {
@@ -67,16 +94,23 @@ const Index = () => {
       <header className="bg-white shadow-sm py-6">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Excel to XML Wizard</h1>
-              <p className="text-gray-500 mt-1">Convert Excel data to structured XML format</p>
+            <div className="flex items-center gap-4">
+              <img 
+                src="/lovable-uploads/162cfaf1-3a46-452c-85b7-6f1cebe1c4e3.png" 
+                alt="Aleido Logo" 
+                className="h-10 w-auto"
+              />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Aleido - Mercedes Data Navigator</h1>
+                <p className="text-gray-500 mt-1">Convert Excel data to structured XML format</p>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex items-center">
                 <span className="text-sm mr-2 hidden sm:inline">Server:</span>
                 <div className={`w-3 h-3 rounded-full ${
                   serverStatus === null ? 'bg-gray-400' : 
-                  serverStatus ? 'bg-green-500' : 'bg-red-500'
+                  serverStatus ? 'bg-primary' : 'bg-red-500'
                 }`}></div>
                 <span className="ml-2 text-sm text-gray-600 hidden sm:inline">
                   {serverStatus === null ? 'Checking...' : 
@@ -122,15 +156,15 @@ const Index = () => {
             
             <TabsContent value="excel" className="mt-6">
               <div className="flex items-center mb-8">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 1 ? 'bg-primary' : 'bg-gray-300'}`}>
                   1
                 </div>
-                <div className={`h-0.5 flex-1 ${currentStep > 1 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                <div className={`h-0.5 flex-1 ${currentStep > 1 ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 2 ? 'bg-primary' : 'bg-gray-300'}`}>
                   2
                 </div>
-                <div className={`h-0.5 flex-1 ${currentStep > 2 ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                <div className={`h-0.5 flex-1 ${currentStep > 2 ? 'bg-primary' : 'bg-gray-300'}`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${currentStep >= 3 ? 'bg-primary' : 'bg-gray-300'}`}>
                   3
                 </div>
               </div>
@@ -147,7 +181,7 @@ const Index = () => {
               {excelData && (
                 <>
                   <section className={`mb-8 ${currentStep === 2 ? 'block' : 'hidden'}`}>
-                    <h2 className="text-xl font-semibold mb-4">Step 2: Select Parameters</h2>
+                    <h2 className="text-xl font-semibold mb-4">Step 2: Process Data</h2>
                     <div className="space-y-6">
                       <DataPreview data={excelData} />
                       
@@ -155,24 +189,19 @@ const Index = () => {
                         <ArrowDown className="text-gray-400" />
                       </div>
                       
-                      <ParameterSelection
-                        headers={excelData.headers}
-                        selectedParameters={selectedParameters}
-                        setSelectedParameters={setSelectedParameters}
-                      />
-                      
-                      <div className="flex justify-between">
+                      <div className="flex justify-end mt-4">
                         <Button 
                           variant="outline" 
                           onClick={() => setCurrentStep(1)}
+                          className="mr-2"
                         >
                           Back to Upload
                         </Button>
                         <Button 
-                          onClick={proceedToXmlGeneration}
-                          disabled={selectedParameters.length === 0}
+                          onClick={handleProcessData}
+                          disabled={isProcessing}
                         >
-                          Generate XML
+                          {isProcessing ? "Processing..." : "Process Data"}
                         </Button>
                       </div>
                     </div>
@@ -191,7 +220,7 @@ const Index = () => {
                           variant="outline" 
                           onClick={() => setCurrentStep(2)}
                         >
-                          Back to Parameters
+                          Back to Process Data
                         </Button>
                       </div>
                     </div>
@@ -209,7 +238,7 @@ const Index = () => {
       
       <footer className="bg-white border-t py-6 mt-12">
         <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-          Excel to XML Wizard &copy; {new Date().getFullYear()}
+          Aleido - Mercedes Data Navigator &copy; {new Date().getFullYear()}
         </div>
       </footer>
     </div>
