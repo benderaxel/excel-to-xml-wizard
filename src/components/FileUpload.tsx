@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   Upload,
   FileText,
-  ArrowRight,
   Check,
   Settings,
   X,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ExcelData } from "../utils/excelParser";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { uploadFile, ingestLocalData } from "../services/apiService";
 import { configStore } from "../utils/configStore";
 import { useSession } from "@/hooks/useSession";
@@ -254,7 +252,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         }
       }
     },
-    [toast, onFileProcessed]
+    [toast, onFileProcessed, sessionId]
   );
 
   const handleDrop = useCallback(
