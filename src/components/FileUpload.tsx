@@ -1,13 +1,21 @@
-
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, ArrowRight, Check, Settings, X, Server, Database } from 'lucide-react';
+import {
+  Upload,
+  FileText,
+  ArrowRight,
+  Check,
+  Settings,
+  X,
+  Server,
+  Database,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { ExcelData } from '../utils/excelParser';
+import { ExcelData } from "../utils/excelParser";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { uploadFile, ingestLocalData } from '../services/apiService';
-import { configStore } from '../utils/configStore';
+import { uploadFile, ingestLocalData } from "../services/apiService";
+import { configStore } from "../utils/configStore";
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
@@ -15,122 +23,267 @@ interface FileUploadProps {
   onShowConfig: () => void;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ 
-  onFileProcessed, 
+interface FileStatus {
+  file: File;
+  name: string;
+  isProcessing: boolean;
+  uploadSuccess: boolean;
+  uploadError: string | null;
+  parsedData: ExcelData | null;
+}
+
+const FileUpload: React.FC<FileUploadProps> = ({
+  onFileProcessed,
   onInitiateProcessing,
-  onShowConfig
+  onShowConfig,
 }) => {
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
   const [isIngesting, setIsIngesting] = useState(false);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [parsedData, setParsedData] = useState<ExcelData | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  
-  const handleFile = useCallback(async (file: File) => {
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      toast({
-        title: "Invalid file format",
-        description: "Please upload an Excel file (.xlsx or .xls)",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setFileName(file.name);
-    setIsProcessing(true);
-    setUploadSuccess(false);
-    setUploadError(null);
-    
-    try {
-      // Upload file to server
-      const response = await uploadFile(file);
-      console.log("Upload response:", response);
-      
-      if (!response.success) {
-        throw new Error(response.message);
+  const [fileStatuses, setFileStatuses] = useState<FileStatus[]>([]);
+
+  const handleFile = useCallback(
+    async (file: File) => {
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        toast({
+          title: "Invalid file format",
+          description: "Please upload an Excel file (.xlsx or .xls)",
+          variant: "destructive",
+        });
+        return;
       }
-      
-      setParsedData(response.data.excelData);
-      setUploadSuccess(true);
-      toast({
-        title: "File uploaded successfully",
-        description: `Processed ${response.data.excelData.rows.length} rows with ${response.data.excelData.headers.length} columns`,
-      });
-      
-      // After successful upload (200 OK), move to state 2
-      if (response.statusCode === 200) {
-        onFileProcessed(response.data.excelData);
+
+      setFileStatuses((prev) =>
+        prev.map((status) => ({ ...status, isProcessing: false }))
+      );
+
+      setFileStatuses((prev) => [
+        ...prev,
+        {
+          file,
+          name: file.name,
+          isProcessing: true,
+          uploadSuccess: false,
+          uploadError: null,
+          parsedData: null,
+        },
+      ]);
+
+      try {
+        // Upload file to server
+        const response = await uploadFile(file);
+        console.log("Upload response:", response);
+
+        if (!response.success) {
+          throw new Error(response.message);
+        }
+
+        setFileStatuses((prev) =>
+          prev.map((status) =>
+            status.file.name === file.name
+              ? {
+                  ...status,
+                  isProcessing: false,
+                  uploadSuccess: true,
+                  parsedData: response.data.excelData,
+                }
+              : status
+          )
+        );
+
+        toast({
+          title: "File uploaded successfully",
+          description: `Processed ${response.data.excelData.rows.length} rows with ${response.data.excelData.headers.length} columns`,
+        });
+
+        // After successful upload (200 OK), move to state 2
+        if (response.statusCode === 200) {
+          onFileProcessed(response.data.excelData);
+        }
+      } catch (error) {
+        console.error("Error processing file:", error);
+        setFileStatuses((prev) =>
+          prev.map((status) =>
+            status.file.name === file.name
+              ? {
+                  ...status,
+                  isProcessing: false,
+                  uploadError:
+                    error instanceof Error
+                      ? error.message
+                      : "Unknown error occurred",
+                }
+              : status
+          )
+        );
+        toast({
+          title: "Error processing file",
+          description:
+            error instanceof Error ? error.message : "Unknown error occurred",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setUploadError(error instanceof Error ? error.message : "Unknown error occurred");
-      toast({
-        title: "Error processing file",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [toast, onFileProcessed]);
+    },
+    [toast, onFileProcessed]
+  );
 
   const handleProcessData = async () => {
     setIsIngesting(true);
-    
+
     try {
       const response = await ingestLocalData();
-      
+
       if (!response.success) {
         throw new Error(response.message);
       }
-      
+
       toast({
         title: "Data processed successfully",
         description: response.message,
       });
-      
+
       // After successful processing (200 OK), move to state 3
       if (response.statusCode === 200) {
         onInitiateProcessing();
       }
     } catch (error) {
-      console.error('Error processing data:', error);
+      console.error("Error processing data:", error);
       toast({
         title: "Error processing data",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setIsIngesting(false);
     }
   };
-  
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFile(e.dataTransfer.files[0]);
-    }
-  }, [handleFile]);
-  
+
+  const handleFiles = useCallback(
+    async (files: File[]) => {
+      const validFiles = files.filter(
+        (file) => file.name.endsWith(".xlsx") || file.name.endsWith(".xls")
+      );
+
+      if (validFiles.length < files.length) {
+        toast({
+          title: "Invalid file format",
+          description:
+            "Some files were skipped. Only Excel files (.xlsx or .xls) are supported",
+          variant: "destructive",
+        });
+      }
+
+      if (validFiles.length === 0) return;
+
+      // Add new files to state
+      const newFileStatuses = validFiles.map((file) => ({
+        file,
+        name: file.name,
+        isProcessing: true,
+        uploadSuccess: false,
+        uploadError: null,
+        parsedData: null,
+      }));
+
+      setFileStatuses((prev) => [...prev, ...newFileStatuses]);
+
+      // Process each file
+      for (let i = 0; i < newFileStatuses.length; i++) {
+        const fileStatus = newFileStatuses[i];
+
+        try {
+          // Upload file to server
+          const response = await uploadFile(fileStatus.file);
+          console.log("Upload response for", fileStatus.name, ":", response);
+
+          if (!response.success) {
+            throw new Error(response.message);
+          }
+
+          // Update state for this file
+          setFileStatuses((prev) =>
+            prev.map((fs) =>
+              fs.name === fileStatus.name
+                ? {
+                    ...fs,
+                    isProcessing: false,
+                    uploadSuccess: true,
+                    parsedData: response.data.excelData,
+                    uploadError: null,
+                  }
+                : fs
+            )
+          );
+
+          toast({
+            title: `File ${fileStatus.name} uploaded successfully`,
+            description: `Processed ${response.data.excelData.rows.length} rows with ${response.data.excelData.headers.length} columns`,
+          });
+
+          // Send data to parent component for the first successful file
+          if (response.statusCode === 200 && i === 0) {
+            onFileProcessed(response.data.excelData);
+          }
+        } catch (error) {
+          console.error("Error processing file:", fileStatus.name, error);
+
+          setFileStatuses((prev) =>
+            prev.map((fs) =>
+              fs.name === fileStatus.name
+                ? {
+                    ...fs,
+                    isProcessing: false,
+                    uploadError:
+                      error instanceof Error
+                        ? error.message
+                        : "Unknown error occurred",
+                  }
+                : fs
+            )
+          );
+
+          toast({
+            title: `Error processing ${fileStatus.name}`,
+            description:
+              error instanceof Error ? error.message : "Unknown error occurred",
+            variant: "destructive",
+          });
+        }
+      }
+    },
+    [toast, onFileProcessed]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFiles(Array.from(e.dataTransfer.files));
+      }
+    },
+    [handleFiles]
+  );
+
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(true);
   }, []);
-  
+
   const handleDragLeave = useCallback(() => {
     setIsDragging(false);
   }, []);
-  
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
-    }
-  }, [handleFile]);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+        handleFiles(Array.from(e.target.files));
+      }
+    },
+    [handleFiles]
+  );
 
   // Helper function to get connection type description
   const getConnectionText = () => {
@@ -142,14 +295,14 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return `${configStore.getApiUrl()}/upload`;
     }
   };
-  
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
         <div className="flex justify-end mb-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onShowConfig}
             className="flex items-center gap-1"
           >
@@ -157,46 +310,51 @@ const FileUpload: React.FC<FileUploadProps> = ({
             Server Config
           </Button>
         </div>
-        
+
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+            isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
           }`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
         >
-          <input 
-            type="file" 
-            id="file-upload" 
-            className="hidden" 
-            accept=".xlsx,.xls" 
-            onChange={handleFileChange} 
+          <input
+            type="file"
+            id="file-upload"
+            className="hidden"
+            accept=".xlsx,.xls"
+            multiple
+            onChange={handleFileChange}
           />
-          
+
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="flex flex-col items-center justify-center space-y-4">
-              {fileName ? (
+              {fileStatuses.length > 0 ? (
                 <>
                   <FileText className="h-12 w-12 text-blue-500" />
-                  <p className="font-medium text-gray-900">{fileName}</p>
-                  {isProcessing ? (
-                    <p className="text-sm text-gray-500">Processing file...</p>
-                  ) : uploadSuccess ? (
-                    <p className="text-sm text-green-500">File uploaded successfully</p>
-                  ) : uploadError ? (
-                    <p className="text-sm text-red-500">Upload failed: {uploadError}</p>
-                  ) : (
-                    <p className="text-sm text-gray-500">File selected</p>
-                  )}
+                  <p className="font-medium text-gray-900">
+                    {fileStatuses.length} file(s) selected
+                  </p>
+                  <div className="text-sm">
+                    {fileStatuses.some((f) => f.isProcessing) && (
+                      <p className="text-gray-500">Processing files...</p>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>
                   <Upload className="h-12 w-12 text-gray-400" />
                   <div className="space-y-2">
-                    <p className="font-medium text-gray-900">Drag and drop your Excel file here</p>
-                    <p className="text-sm text-gray-500">or click to browse files</p>
-                    <p className="text-xs text-gray-400">(Supported formats: .xlsx, .xls)</p>
+                    <p className="font-medium text-gray-900">
+                      Drag and drop Excel files here
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      or click to browse files
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      (Supported formats: .xlsx, .xls)
+                    </p>
                   </div>
                   <div className="flex items-center justify-center text-xs text-gray-400 mt-2">
                     <Server className="h-3 w-3 mr-1" />
@@ -207,11 +365,54 @@ const FileUpload: React.FC<FileUploadProps> = ({
             </div>
           </label>
         </div>
-        
+
+        {/* File list */}
+        {fileStatuses.length > 0 && (
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">Files</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {fileStatuses.map((fileStatus, index) => (
+                <div
+                  key={fileStatus.name + index}
+                  className="border rounded-md p-3 flex justify-between items-center"
+                >
+                  <div className="flex items-center space-x-3">
+                    <FileText className="h-5 w-5 text-gray-500" />
+                    <div>
+                      <p className="text-sm font-medium">{fileStatus.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {fileStatus.isProcessing
+                          ? "Processing..."
+                          : fileStatus.uploadSuccess
+                          ? "Uploaded successfully"
+                          : fileStatus.uploadError
+                          ? `Error: ${fileStatus.uploadError}`
+                          : "Ready"}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    {fileStatus.uploadSuccess && (
+                      <Check className="h-4 w-4 text-green-500" />
+                    )}
+                    {fileStatus.uploadError && (
+                      <X className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-4">
           <Button
             onClick={handleProcessData}
-            disabled={isIngesting || !uploadSuccess}
+            disabled={
+              isIngesting ||
+              fileStatuses.length === 0 ||
+              !fileStatuses.some((f) => f.uploadSuccess)
+            }
             variant="secondary"
             className="w-full flex items-center justify-center gap-2 mb-4"
           >
@@ -219,42 +420,22 @@ const FileUpload: React.FC<FileUploadProps> = ({
             {isIngesting ? "Processing..." : "Process Data"}
           </Button>
         </div>
-        
-        {uploadSuccess && (
-          <div className="mt-4 space-y-4">
-            <Alert className="bg-green-50 border-green-200">
-              <Check className="h-4 w-4 text-green-500" />
-              <AlertDescription className="text-green-700">
-                Excel file successfully uploaded and processed! {parsedData?.rows.length} rows are ready for processing.
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
 
-        {uploadError && (
-          <div className="mt-4">
-            <Alert className="bg-red-50 border-red-200">
-              <X className="h-4 w-4 text-red-500" />
-              <AlertDescription className="text-red-700">
-                {uploadError}
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
-        
-        {fileName && !isProcessing && !uploadSuccess && !uploadError && (
+        {fileStatuses.length > 0 && (
           <div className="mt-4 flex justify-center">
-            <Button 
+            <Button
               variant="outline"
               onClick={() => {
-                setFileName(null);
-                setUploadSuccess(false);
-                setParsedData(null);
-                setUploadError(null);
-                document.getElementById('file-upload') && ((document.getElementById('file-upload') as HTMLInputElement).value = '');
+                setFileStatuses([]);
+                const fileInput = document.getElementById(
+                  "file-upload"
+                ) as HTMLInputElement;
+                if (fileInput) {
+                  fileInput.value = "";
+                }
               }}
             >
-              Upload another file
+              Upload more files
             </Button>
           </div>
         )}

@@ -1,18 +1,55 @@
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Database, Search } from 'lucide-react';
+import { Database, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryDataGraph } from '../services/apiService';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { queryDataGraph } from "../services/apiService";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const DEFAULT_BUILD_LINE = "254";
 const DEFAULT_MARKET = "USA/CND";
 const DEFAULT_GRAPH_PROPERTY = "H101 Fahrzeughöhe (M1 ~ ff) (mm)";
+
+// Add market options
+const MARKET_OPTIONS = [
+  "USA/CND",
+  "EU",
+  "China",
+  "Japan",
+  "Korea",
+  "Middle East",
+  "Australia",
+  "South America",
+  // Add more markets as needed
+];
+
+// Add sample graph properties
+const GRAPH_PROPERTIES = [
+  "H101 Fahrzeughöhe (M1 ~ ff) (mm)",
+  "H100 Fahrzeughöhe (ohne Antenne) (mm)",
+  "L101 Fahrzeuglänge (mm)",
+  "L103 Radstand (mm)",
+  "B101 Fahrzeugbreite (über alles) (mm)",
+  "G1 Gesamtmasse (kg)",
+  // Add more options as needed
+];
 
 interface TableData {
   headers: string[];
@@ -27,84 +64,91 @@ const DataQuery: React.FC = () => {
   const [isQuerying, setIsQuerying] = useState(false);
   const [queryResult, setQueryResult] = useState<TableData | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
-  
+
   const parseXmlTable = (xmlString: string): TableData => {
     // Create a simple XML parser
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlString, "text/xml");
-    
+
     // Extract headers
     const headers: string[] = [];
-    const headerEntries = xmlDoc.querySelectorAll('thead entry');
-    headerEntries.forEach(entry => {
-      headers.push(entry.textContent || '');
+    const headerEntries = xmlDoc.querySelectorAll("thead entry");
+    headerEntries.forEach((entry) => {
+      headers.push(entry.textContent || "");
     });
-    
+
     // Extract rows
     const rows: Record<string, string>[] = [];
-    const rowElements = xmlDoc.querySelectorAll('tbody row');
-    
-    rowElements.forEach(rowElement => {
+    const rowElements = xmlDoc.querySelectorAll("tbody row");
+
+    rowElements.forEach((rowElement) => {
       const row: Record<string, string> = {};
-      const entries = rowElement.querySelectorAll('entry');
-      
+      const entries = rowElement.querySelectorAll("entry");
+
       entries.forEach((entry, index) => {
         if (index < headers.length) {
-          row[headers[index]] = entry.textContent || '';
+          row[headers[index]] = entry.textContent || "";
         }
       });
-      
+
       rows.push(row);
     });
-    
+
     return { headers, rows };
   };
-  
+
   const handleQuery = async () => {
     setIsQuerying(true);
     setQueryResult(null);
     setQueryError(null);
-    
+
     try {
-      const query = `build_line=${encodeURIComponent(buildLine)}&market=${encodeURIComponent(market)}&graph_property=${encodeURIComponent(graphProperty)}`;
+      const query = `build_line=${encodeURIComponent(
+        buildLine
+      )}&market=${encodeURIComponent(
+        market
+      )}&graph_property=${encodeURIComponent(graphProperty)}`;
       const response = await queryDataGraph(query);
-      
+
       if (!response.success) {
         throw new Error(response.message);
       }
-      
+
       // Parse the XML table data
       const tableData = parseXmlTable(response.data);
       setQueryResult(tableData);
-      
+
       toast({
         title: "Query executed successfully",
         description: `Retrieved ${tableData.rows.length} rows from the database`,
       });
     } catch (error) {
-      console.error('Query error:', error);
-      setQueryError(error instanceof Error ? error.message : "Unknown error occurred");
+      console.error("Query error:", error);
+      setQueryError(
+        error instanceof Error ? error.message : "Unknown error occurred"
+      );
       toast({
         title: "Query failed",
-        description: error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive"
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+        variant: "destructive",
       });
     } finally {
       setIsQuerying(false);
     }
   };
-  
+
   const resetForm = () => {
     setBuildLine(DEFAULT_BUILD_LINE);
     setMarket(DEFAULT_MARKET);
     setGraphProperty(DEFAULT_GRAPH_PROPERTY);
   };
-  
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5" /> 
+          <Database className="h-5 w-5" />
           Select Data
         </CardTitle>
       </CardHeader>
@@ -121,33 +165,50 @@ const DataQuery: React.FC = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="market">Market</Label>
-            <Input
-              id="market"
-              value={market}
-              onChange={(e) => setMarket(e.target.value)}
-              placeholder="Enter market"
-            />
+            <Select value={market} onValueChange={setMarket}>
+              <SelectTrigger id="market" className="w-full">
+                <SelectValue placeholder="Select a market" />
+              </SelectTrigger>
+              <SelectContent>
+                {MARKET_OPTIONS.map((marketOption) => (
+                  <SelectItem
+                    key={marketOption}
+                    value={marketOption}
+                    className="focus:text-white"
+                  >
+                    {marketOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <Label htmlFor="graphProperty">Graph Property</Label>
-          <Input
-            id="graphProperty"
-            value={graphProperty}
-            onChange={(e) => setGraphProperty(e.target.value)}
-            placeholder="Enter graph property"
-          />
+          <Select value={graphProperty} onValueChange={setGraphProperty}>
+            <SelectTrigger id="graphProperty" className="w-full">
+              <SelectValue placeholder="Select a graph property" />
+            </SelectTrigger>
+            <SelectContent>
+              {GRAPH_PROPERTIES.map((property) => (
+                <SelectItem
+                  key={property}
+                  value={property}
+                  className="focus:text-white"
+                >
+                  {property}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        
+
         <div className="flex justify-between mt-4">
-          <Button 
-            variant="outline"
-            onClick={resetForm}
-          >
+          <Button variant="outline" onClick={resetForm}>
             Reset to Defaults
           </Button>
-          <Button 
+          <Button
             onClick={handleQuery}
             disabled={isQuerying || !buildLine || !market || !graphProperty}
             className="flex items-center gap-2"
@@ -156,15 +217,13 @@ const DataQuery: React.FC = () => {
             {isQuerying ? "Querying..." : "Execute Query"}
           </Button>
         </div>
-        
+
         {queryError && (
           <Alert variant="destructive" className="mt-4">
-            <AlertDescription>
-              {queryError}
-            </AlertDescription>
+            <AlertDescription>{queryError}</AlertDescription>
           </Alert>
         )}
-        
+
         {queryResult && queryResult.rows.length > 0 && (
           <div className="mt-6 overflow-x-auto">
             <h3 className="text-lg font-medium mb-2">Query Results</h3>
@@ -188,7 +247,7 @@ const DataQuery: React.FC = () => {
             </Table>
           </div>
         )}
-        
+
         {queryResult && queryResult.rows.length === 0 && (
           <Alert className="mt-4">
             <AlertDescription>
