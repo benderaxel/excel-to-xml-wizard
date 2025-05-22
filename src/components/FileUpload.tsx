@@ -16,6 +16,7 @@ import { ExcelData } from "../utils/excelParser";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { uploadFile, ingestLocalData } from "../services/apiService";
 import { configStore } from "../utils/configStore";
+import { useSession } from "@/hooks/useSession";
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
@@ -37,6 +38,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   onInitiateProcessing,
   onShowConfig,
 }) => {
+  const { sessionId } = useSession();
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
   const [isIngesting, setIsIngesting] = useState(false);
@@ -71,7 +73,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
       try {
         // Upload file to server
-        const response = await uploadFile(file);
+        const response = await uploadFile(file, sessionId);
         console.log("Upload response:", response);
 
         if (!response.success) {
@@ -124,7 +126,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         });
       }
     },
-    [toast, onFileProcessed]
+    [toast, onFileProcessed, sessionId]
   );
 
   const handleProcessData = async () => {
@@ -194,7 +196,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
         try {
           // Upload file to server
-          const response = await uploadFile(fileStatus.file);
+          const response = await uploadFile(fileStatus.file, sessionId);
           console.log("Upload response for", fileStatus.name, ":", response);
 
           if (!response.success) {

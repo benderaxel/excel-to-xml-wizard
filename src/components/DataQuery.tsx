@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSession } from "@/hooks/useSession";
 
 const DEFAULT_BUILD_LINE = "254";
 const DEFAULT_MARKET = "USA/CND";
@@ -37,6 +38,7 @@ interface TableData {
 }
 
 const DataQuery: React.FC = () => {
+  const { sessionId } = useSession();
   const { toast } = useToast();
   const [buildLine, setBuildLine] = useState(DEFAULT_BUILD_LINE);
   const [market, setMarket] = useState(DEFAULT_MARKET);
@@ -46,7 +48,9 @@ const DataQuery: React.FC = () => {
   const [queryError, setQueryError] = useState<string | null>(null);
 
   const [marketOptions, setMarketOptions] = useState<string[]>([]);
-  const [graphProperties, setGraphProperties] = useState<string[]>([]);
+  const [graphProperties, setGraphProperties] = useState<
+    Record<string, string>
+  >({});
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
 
   // Fetch dropdown options on component mount
@@ -56,8 +60,8 @@ const DataQuery: React.FC = () => {
 
       try {
         // Fetch market options
-        const marketsResponse = await fetchMarketOptions();
-        const propertiesResponse = await fetchGraphProperties();
+        const marketsResponse = await fetchMarketOptions(sessionId);
+        const propertiesResponse = await fetchGraphProperties(sessionId);
         if (marketsResponse.success) {
           setMarketOptions(marketsResponse.data);
         }
@@ -78,7 +82,7 @@ const DataQuery: React.FC = () => {
     };
 
     loadOptions();
-  }, [toast]);
+  }, [toast, sessionId]);
 
   const parseXmlTable = (xmlString: string): TableData => {
     // Create a simple XML parser
@@ -118,12 +122,18 @@ const DataQuery: React.FC = () => {
     setQueryError(null);
 
     try {
-      const query = `build_line=${encodeURIComponent(
-        buildLine
-      )}&market=${encodeURIComponent(
-        market
-      )}&graph_property=${encodeURIComponent(graphProperty)}`;
-      const response = await queryDataGraph(query);
+      // const query = `build_line=${encodeURIComponent(
+      //   buildLine
+      // )}&market=${encodeURIComponent(
+      //   market
+      // )}&graph_property=${encodeURIComponent(graphProperty)}`;
+      const body = {
+        build_line: buildLine,
+        market: market,
+        graph_property: graphProperty,
+      };
+
+      const response = await queryDataGraph(body, sessionId);
 
       if (!response.success) {
         throw new Error(response.message);
@@ -225,9 +235,9 @@ const DataQuery: React.FC = () => {
               )}
             </SelectTrigger>
             <SelectContent>
-              {graphProperties.map((property) => (
-                <SelectItem key={property} value={property}>
-                  {property}
+              {Object.entries(graphProperties).map(([key, value]) => (
+                <SelectItem key={key} value={value}>
+                  {value}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -8,9 +8,12 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
-export const uploadFile = async (file: File): Promise<ServerResponse> => {
+export const uploadFile = async (
+  file: File,
+  sessionId: string
+): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/upload`;
+    const apiUrl = `${configStore.getApiUrl()}/api/v2/ingest/${sessionId}`;
     const formData = new FormData();
     formData.append("file", file);
 
@@ -150,14 +153,20 @@ export const ingestLocalData = async (): Promise<ServerResponse> => {
 };
 
 export const queryDataGraph = async (
-  query: string
+  body: {
+    build_line: string;
+    market: string;
+    graph_property: string;
+  },
+  sessionId: string
 ): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/query?${query}`;
+    const apiUrl = `${configStore.getApiUrl()}/api/v2/query/${sessionId}`;
     console.log(`Querying data graph at: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
-      method: "GET",
+      method: "POST",
+      body: JSON.stringify(body),
       mode: "cors",
       credentials: "omit", // Change from 'include' to 'omit'
     });
@@ -187,9 +196,12 @@ export const queryDataGraph = async (
   }
 };
 
-export async function fetchMarketOptions() {
+export async function fetchMarketOptions(sessionId: string) {
   try {
-    const response = await fetch(`${configStore.getApiUrl()}/markets`);
+    // /api/v2/property-values/{session_id}/{property_id}
+    const response = await fetch(
+      `${configStore.getApiUrl()}/api/v2/properties/${sessionId}/for_market`
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -213,9 +225,11 @@ export async function fetchMarketOptions() {
   }
 }
 
-export async function fetchGraphProperties() {
+export async function fetchGraphProperties(sessionId: string) {
   try {
-    const response = await fetch(`${configStore.getApiUrl()}/graph-properties`);
+    const response = await fetch(
+      `${configStore.getApiUrl()}/api/v2/properties/${sessionId}`
+    );
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
