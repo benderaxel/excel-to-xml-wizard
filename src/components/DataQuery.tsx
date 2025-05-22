@@ -1,12 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Database, Search } from "lucide-react";
+import { Database, Search, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { queryDataGraph } from "../services/apiService";
+import {
+  queryDataGraph,
+  fetchMarketOptions,
+  fetchGraphProperties,
+} from "../services/apiService";
 import {
   Table,
   TableHeader,
@@ -27,30 +31,6 @@ const DEFAULT_BUILD_LINE = "254";
 const DEFAULT_MARKET = "USA/CND";
 const DEFAULT_GRAPH_PROPERTY = "H101 Fahrzeughöhe (M1 ~ ff) (mm)";
 
-// Add market options
-const MARKET_OPTIONS = [
-  "USA/CND",
-  "EU",
-  "China",
-  "Japan",
-  "Korea",
-  "Middle East",
-  "Australia",
-  "South America",
-  // Add more markets as needed
-];
-
-// Add sample graph properties
-const GRAPH_PROPERTIES = [
-  "H101 Fahrzeughöhe (M1 ~ ff) (mm)",
-  "H100 Fahrzeughöhe (ohne Antenne) (mm)",
-  "L101 Fahrzeuglänge (mm)",
-  "L103 Radstand (mm)",
-  "B101 Fahrzeugbreite (über alles) (mm)",
-  "G1 Gesamtmasse (kg)",
-  // Add more options as needed
-];
-
 interface TableData {
   headers: string[];
   rows: Record<string, string>[];
@@ -64,6 +44,41 @@ const DataQuery: React.FC = () => {
   const [isQuerying, setIsQuerying] = useState(false);
   const [queryResult, setQueryResult] = useState<TableData | null>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
+
+  const [marketOptions, setMarketOptions] = useState<string[]>([]);
+  const [graphProperties, setGraphProperties] = useState<string[]>([]);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(true);
+
+  // Fetch dropdown options on component mount
+  useEffect(() => {
+    const loadOptions = async () => {
+      setIsLoadingOptions(true);
+
+      try {
+        // Fetch market options
+        const marketsResponse = await fetchMarketOptions();
+        const propertiesResponse = await fetchGraphProperties();
+        if (marketsResponse.success) {
+          setMarketOptions(marketsResponse.data);
+        }
+
+        if (propertiesResponse.success) {
+          setGraphProperties(propertiesResponse.data);
+        }
+      } catch (error) {
+        toast({
+          title: "Warning",
+          description:
+            "Failed to load options from server. Using default values.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoadingOptions(false);
+      }
+    };
+
+    loadOptions();
+  }, [toast]);
 
   const parseXmlTable = (xmlString: string): TableData => {
     // Create a simple XML parser
@@ -161,21 +176,29 @@ const DataQuery: React.FC = () => {
               value={buildLine}
               onChange={(e) => setBuildLine(e.target.value)}
               placeholder="Enter build line"
+              disabled={isLoadingOptions}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="market">Market</Label>
-            <Select value={market} onValueChange={setMarket}>
+            <Select
+              value={market}
+              onValueChange={setMarket}
+              disabled={isLoadingOptions}
+            >
               <SelectTrigger id="market" className="w-full">
-                <SelectValue placeholder="Select a market" />
+                {isLoadingOptions ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading...</span>
+                  </div>
+                ) : (
+                  <SelectValue placeholder="Select a market" />
+                )}
               </SelectTrigger>
               <SelectContent>
-                {MARKET_OPTIONS.map((marketOption) => (
-                  <SelectItem
-                    key={marketOption}
-                    value={marketOption}
-                    className="focus:text-white"
-                  >
+                {marketOptions.map((marketOption) => (
+                  <SelectItem key={marketOption} value={marketOption}>
                     {marketOption}
                   </SelectItem>
                 ))}
@@ -186,17 +209,24 @@ const DataQuery: React.FC = () => {
 
         <div className="space-y-2">
           <Label htmlFor="graphProperty">Graph Property</Label>
-          <Select value={graphProperty} onValueChange={setGraphProperty}>
+          <Select
+            value={graphProperty}
+            onValueChange={setGraphProperty}
+            disabled={isLoadingOptions}
+          >
             <SelectTrigger id="graphProperty" className="w-full">
-              <SelectValue placeholder="Select a graph property" />
+              {isLoadingOptions ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                <SelectValue placeholder="Select a graph property" />
+              )}
             </SelectTrigger>
             <SelectContent>
-              {GRAPH_PROPERTIES.map((property) => (
-                <SelectItem
-                  key={property}
-                  value={property}
-                  className="focus:text-white"
-                >
+              {graphProperties.map((property) => (
+                <SelectItem key={property} value={property}>
                   {property}
                 </SelectItem>
               ))}
@@ -205,16 +235,35 @@ const DataQuery: React.FC = () => {
         </div>
 
         <div className="flex justify-between mt-4">
-          <Button variant="outline" onClick={resetForm}>
+          <Button
+            variant="outline"
+            onClick={resetForm}
+            disabled={isLoadingOptions}
+          >
             Reset to Defaults
           </Button>
           <Button
             onClick={handleQuery}
-            disabled={isQuerying || !buildLine || !market || !graphProperty}
+            disabled={
+              isQuerying ||
+              isLoadingOptions ||
+              !buildLine ||
+              !market ||
+              !graphProperty
+            }
             className="flex items-center gap-2"
           >
-            <Search className="h-4 w-4" />
-            {isQuerying ? "Querying..." : "Execute Query"}
+            {isQuerying ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Querying...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                Execute Query
+              </>
+            )}
           </Button>
         </div>
 
