@@ -7,7 +7,7 @@ import XmlOutput from "@/components/XmlOutput";
 import DataQuery from "@/components/DataQuery";
 import { ExcelData } from "@/utils/excelParser";
 import { ArrowDown, Server, Cog, Database } from "lucide-react";
-import { checkServerHealth, ingestLocalData } from "@/services/apiService";
+import { checkServerHealth } from "@/services/apiService";
 import { configStore } from "@/utils/configStore";
 import ServerConfig from "@/components/ServerConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -43,34 +43,34 @@ const Index = () => {
     setCurrentStep(2); // Move to step 2 after successful upload
   };
 
-  const handleProcessData = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await ingestLocalData();
-      if (response.success) {
-        setCurrentStep(3); // Move to step 3 after successful processing
-        toast({
-          title: "Success",
-          description: "Data processed successfully",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to process data",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-      console.error("Process data error:", error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  // const handleProcessData = async () => {
+  //   setIsProcessing(true);
+  //   try {
+  //     const response = await ingestLocalData();
+  //     if (response.success) {
+  //       setCurrentStep(3); // Move to step 3 after successful processing
+  //       toast({
+  //         title: "Success",
+  //         description: "Data processed successfully",
+  //       });
+  //     } else {
+  //       toast({
+  //         title: "Error",
+  //         description: response.message || "Failed to process data",
+  //         variant: "destructive",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     toast({
+  //       title: "Error",
+  //       description: "An unexpected error occurred",
+  //       variant: "destructive",
+  //     });
+  //     console.error("Process data error:", error);
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
 
   const proceedToXmlGeneration = () => {
     if (selectedParameters.length > 0) {
@@ -211,7 +211,6 @@ const Index = () => {
                 </h2>
                 <FileUpload
                   onFileProcessed={handleFileProcessed}
-                  onInitiateProcessing={handleProcessData}
                   onShowConfig={() => setShowConfigModal(true)}
                 />
               </section>
@@ -240,10 +239,10 @@ const Index = () => {
                           Back to Upload
                         </Button>
                         <Button
-                          onClick={handleProcessData}
+                          onClick={() => setCurrentStep(3)}
                           disabled={isProcessing}
                         >
-                          {isProcessing ? "Processing..." : "Process Data"}
+                          See XML Output
                         </Button>
                       </div>
                     </div>

@@ -12,13 +12,12 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ExcelData } from "../utils/excelParser";
-import { uploadFile, ingestLocalData } from "../services/apiService";
+import { uploadFile } from "../services/apiService";
 import { configStore } from "../utils/configStore";
 import { useSession } from "@/hooks/useSession";
 
 interface FileUploadProps {
   onFileProcessed: (data: ExcelData) => void;
-  onInitiateProcessing: () => void;
   onShowConfig: () => void;
 }
 
@@ -33,13 +32,12 @@ interface FileStatus {
 
 const FileUpload: React.FC<FileUploadProps> = ({
   onFileProcessed,
-  onInitiateProcessing,
   onShowConfig,
 }) => {
   const { sessionId } = useSession();
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
-  const [isIngesting, setIsIngesting] = useState(false);
+  // const [isIngesting, setIsIngesting] = useState(false);
   const [fileStatuses, setFileStatuses] = useState<FileStatus[]>([]);
 
   const handleFile = useCallback(
@@ -127,37 +125,37 @@ const FileUpload: React.FC<FileUploadProps> = ({
     [toast, onFileProcessed, sessionId]
   );
 
-  const handleProcessData = async () => {
-    setIsIngesting(true);
+  // const handleProcessData = async () => {
+  //   setIsIngesting(true);
 
-    try {
-      const response = await ingestLocalData();
+  //   try {
+  //     const response = await ingestLocalData();
 
-      if (!response.success) {
-        throw new Error(response.message);
-      }
+  //     if (!response.success) {
+  //       throw new Error(response.message);
+  //     }
 
-      toast({
-        title: "Data processed successfully",
-        description: response.message,
-      });
+  //     toast({
+  //       title: "Data processed successfully",
+  //       description: response.message,
+  //     });
 
-      // After successful processing (200 OK), move to state 3
-      if (response.statusCode === 200) {
-        onInitiateProcessing();
-      }
-    } catch (error) {
-      console.error("Error processing data:", error);
-      toast({
-        title: "Error processing data",
-        description:
-          error instanceof Error ? error.message : "Unknown error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsIngesting(false);
-    }
-  };
+  //     // After successful processing (200 OK), move to state 3
+  //     if (response.statusCode === 200) {
+  //       onInitiateProcessing();
+  //     }
+  //   } catch (error) {
+  //     console.error("Error processing data:", error);
+  //     toast({
+  //       title: "Error processing data",
+  //       description:
+  //         error instanceof Error ? error.message : "Unknown error occurred",
+  //       variant: "destructive",
+  //     });
+  //   } finally {
+  //     setIsIngesting(false);
+  //   }
+  // };
 
   const handleFiles = useCallback(
     async (files: File[]) => {
@@ -405,7 +403,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           </div>
         )}
 
-        <div className="mt-4">
+        {/* <div className="mt-4">
           <Button
             onClick={handleProcessData}
             disabled={
@@ -419,7 +417,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
             <Database className="h-4 w-4" />
             {isIngesting ? "Processing..." : "Process Data"}
           </Button>
-        </div>
+        </div> */}
 
         {fileStatuses.length > 0 && (
           <div className="mt-4 flex justify-center">

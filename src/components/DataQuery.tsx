@@ -63,11 +63,13 @@ const DataQuery: React.FC = () => {
         const marketsResponse = await fetchMarketOptions(sessionId);
         const propertiesResponse = await fetchGraphProperties(sessionId);
         if (marketsResponse.success) {
-          setMarketOptions(marketsResponse.data);
+          setMarketOptions(marketsResponse.data ? marketsResponse.data : []);
         }
 
         if (propertiesResponse.success) {
-          setGraphProperties(propertiesResponse.data);
+          setGraphProperties(
+            propertiesResponse.data ? propertiesResponse.data : {}
+          );
         }
       } catch (error) {
         toast({
@@ -207,11 +209,17 @@ const DataQuery: React.FC = () => {
                 )}
               </SelectTrigger>
               <SelectContent>
-                {marketOptions.map((marketOption) => (
-                  <SelectItem key={marketOption} value={marketOption}>
-                    {marketOption}
+                {marketOptions && marketOptions.length > 0 ? (
+                  marketOptions.map((marketOption) => (
+                    <SelectItem key={marketOption} value={marketOption}>
+                      {marketOption}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-markets" disabled>
+                    No markets available
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -235,11 +243,17 @@ const DataQuery: React.FC = () => {
               )}
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(graphProperties).map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {value}
+              {Object.entries(graphProperties || {})?.length > 0 ? (
+                Object.entries(graphProperties || {}).map(([key, value]) => (
+                  <SelectItem key={key} value={value}>
+                    {value}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-properties" disabled>
+                  No properties available
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
