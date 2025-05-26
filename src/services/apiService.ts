@@ -200,7 +200,7 @@ export async function fetchMarketOptions(sessionId: string) {
   try {
     // /api/v2/property-values/{session_id}/{property_id}
     const response = await fetch(
-      `${configStore.getApiUrl()}/api/v2/properties/${sessionId}/for_market`
+      `${configStore.getApiUrl()}/api/v2/property-values/${sessionId}/for_market`
     );
 
     if (!response.ok) {
@@ -210,7 +210,7 @@ export async function fetchMarketOptions(sessionId: string) {
     const data = await response.json();
     return {
       success: true,
-      data: data.markets,
+      data: data,
       message: "Market options fetched successfully",
     };
   } catch (error) {
@@ -238,7 +238,7 @@ export async function fetchGraphProperties(sessionId: string) {
     const data = await response.json();
     return {
       success: true,
-      data: data.properties,
+      data: data,
       message: "Graph properties fetched successfully",
     };
   } catch (error) {
