@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
@@ -72,11 +72,11 @@ const Index = () => {
   //   }
   // };
 
-  const proceedToXmlGeneration = () => {
-    if (selectedParameters.length > 0) {
-      setCurrentStep(3);
-    }
-  };
+  // const proceedToXmlGeneration = () => {
+  //   if (selectedParameters.length > 0) {
+  //     setCurrentStep(3);
+  //   }
+  // };
 
   const getConnectionInfo = () => {
     if (configStore.ngrokUrl) {
@@ -182,7 +182,7 @@ const Index = () => {
                     currentStep > 1 ? "bg-primary" : "bg-gray-300"
                   }`}
                 ></div>
-                <div
+                {/* <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${
                     currentStep >= 2 ? "bg-primary" : "bg-gray-300"
                   }`}
@@ -193,13 +193,13 @@ const Index = () => {
                   className={`h-0.5 flex-1 ${
                     currentStep > 2 ? "bg-primary" : "bg-gray-300"
                   }`}
-                ></div>
+                ></div> */}
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${
-                    currentStep >= 3 ? "bg-primary" : "bg-gray-300"
+                    currentStep >= 2 ? "bg-primary" : "bg-gray-300"
                   }`}
                 >
-                  3
+                  2
                 </div>
               </div>
 
@@ -217,7 +217,7 @@ const Index = () => {
 
               {excelData && (
                 <>
-                  <section
+                  {/* <section
                     className={`mb-8 ${currentStep === 2 ? "block" : "hidden"}`}
                   >
                     <h2 className="text-xl font-semibold mb-4">
@@ -246,13 +246,13 @@ const Index = () => {
                         </Button>
                       </div>
                     </div>
-                  </section>
+                  </section> */}
 
                   <section
-                    className={`mb-8 ${currentStep === 3 ? "block" : "hidden"}`}
+                    className={`mb-8 ${currentStep === 2 ? "block" : "hidden"}`}
                   >
                     <h2 className="text-xl font-semibold mb-4">
-                      Step 3: XML Output
+                      Step 2: XML Output
                     </h2>
                     <div className="space-y-6">
                       <XmlOutput
@@ -263,7 +263,7 @@ const Index = () => {
                       <div className="flex justify-between">
                         <Button
                           variant="outline"
-                          onClick={() => setCurrentStep(2)}
+                          onClick={() => setCurrentStep(1)}
                         >
                           Back to Process Data
                         </Button>
