@@ -211,7 +211,11 @@ const DataQuery: React.FC = () => {
               <SelectContent>
                 {marketOptions && marketOptions.length > 0 ? (
                   marketOptions.map((marketOption) => (
-                    <SelectItem key={marketOption} value={marketOption}>
+                    <SelectItem
+                      key={marketOption}
+                      value={marketOption}
+                      className="focus:text-white cursor-pointer"
+                    >
                       {marketOption}
                     </SelectItem>
                   ))
@@ -245,7 +249,11 @@ const DataQuery: React.FC = () => {
             <SelectContent>
               {Object.entries(graphProperties || {})?.length > 0 ? (
                 Object.entries(graphProperties || {}).map(([key, value]) => (
-                  <SelectItem key={key} value={value}>
+                  <SelectItem
+                    key={key}
+                    value={value}
+                    className="focus:text-white cursor-pointer"
+                  >
                     {value}
                   </SelectItem>
                 ))
