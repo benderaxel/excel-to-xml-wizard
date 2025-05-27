@@ -166,6 +166,9 @@ export const queryDataGraph = async (
 
     const response = await fetch(apiUrl, {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify(body),
       mode: "cors",
       credentials: "omit", // Change from 'include' to 'omit'
