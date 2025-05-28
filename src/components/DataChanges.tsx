@@ -133,10 +133,11 @@ export const DataChanges = () => {
   const [maker, setMaker] = useState("");
 
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-  const [marketOptions, setMarketOptions] = useState<string[]>(defaultMarket);
+  const [marketOptions, setMarketOptions] = useState<string[]>([]);
   const [makerData, setMakerData] = useState<string[]>([]);
-  const [graphProperties, setGraphProperties] =
-    useState<Record<string, string>>(defaultProperties);
+  const [graphProperties, setGraphProperties] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     const loadOptions = async () => {
