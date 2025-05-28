@@ -6,12 +6,13 @@ import ParameterSelection from "@/components/ParameterSelection";
 import XmlOutput from "@/components/XmlOutput";
 import DataQuery from "@/components/DataQuery";
 import { ExcelData } from "@/utils/excelParser";
-import { ArrowDown, Server, Cog, Database } from "lucide-react";
+import { ArrowDown, Server, Cog, Database, Diff } from "lucide-react";
 import { checkServerHealth } from "@/services/apiService";
 import { configStore } from "@/utils/configStore";
 import ServerConfig from "@/components/ServerConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { DataChanges } from "@/components/DataChanges";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
@@ -19,7 +20,9 @@ const Index = () => {
   const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"excel" | "query">("excel");
+  const [activeTab, setActiveTab] = useState<"excel" | "query" | "changes">(
+    "excel"
+  );
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Check server status on component mount
@@ -42,41 +45,6 @@ const Index = () => {
     setSelectedParameters([]); // Reset selected parameters
     setCurrentStep(2); // Move to step 2 after successful upload
   };
-
-  // const handleProcessData = async () => {
-  //   setIsProcessing(true);
-  //   try {
-  //     const response = await ingestLocalData();
-  //     if (response.success) {
-  //       setCurrentStep(3); // Move to step 3 after successful processing
-  //       toast({
-  //         title: "Success",
-  //         description: "Data processed successfully",
-  //       });
-  //     } else {
-  //       toast({
-  //         title: "Error",
-  //         description: response.message || "Failed to process data",
-  //         variant: "destructive",
-  //       });
-  //     }
-  //   } catch (error) {
-  //     toast({
-  //       title: "Error",
-  //       description: "An unexpected error occurred",
-  //       variant: "destructive",
-  //     });
-  //     console.error("Process data error:", error);
-  //   } finally {
-  //     setIsProcessing(false);
-  //   }
-  // };
-
-  // const proceedToXmlGeneration = () => {
-  //   if (selectedParameters.length > 0) {
-  //     setCurrentStep(3);
-  //   }
-  // };
 
   const getConnectionInfo = () => {
     if (configStore.ngrokUrl) {
@@ -154,10 +122,12 @@ const Index = () => {
         <div className="max-w-4xl mx-auto">
           <Tabs
             value={activeTab}
-            onValueChange={(val) => setActiveTab(val as "excel" | "query")}
+            onValueChange={(val) =>
+              setActiveTab(val as "excel" | "query" | "changes")
+            }
             className="w-full mb-8"
           >
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="excel" className="flex items-center gap-2">
                 <ArrowDown className="h-4 w-4" />
                 Excel Processing
@@ -166,48 +136,18 @@ const Index = () => {
                 <Database className="h-4 w-4" />
                 Select Data
               </TabsTrigger>
+              <TabsTrigger value="changes" className="flex items-center gap-2">
+                <Diff className="h-4 w-4" />
+                View changes
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="excel" className="mt-6">
-              <div className="flex items-center mb-8">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${
-                    currentStep >= 1 ? "bg-primary" : "bg-gray-300"
-                  }`}
-                >
-                  1
-                </div>
-                <div
-                  className={`h-0.5 flex-1 ${
-                    currentStep > 1 ? "bg-primary" : "bg-gray-300"
-                  }`}
-                ></div>
-                {/* <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${
-                    currentStep >= 2 ? "bg-primary" : "bg-gray-300"
-                  }`}
-                >
-                  2
-                </div>
-                <div
-                  className={`h-0.5 flex-1 ${
-                    currentStep > 2 ? "bg-primary" : "bg-gray-300"
-                  }`}
-                ></div> */}
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-white ${
-                    currentStep >= 2 ? "bg-primary" : "bg-gray-300"
-                  }`}
-                >
-                  2
-                </div>
-              </div>
-
               <section
                 className={`mb-8 ${currentStep === 1 ? "block" : "hidden"}`}
               >
                 <h2 className="text-xl font-semibold mb-4">
-                  Step 1: Upload Excel File
+                  Upload Excel Files
                 </h2>
                 <FileUpload
                   onFileProcessed={handleFileProcessed}
@@ -217,37 +157,6 @@ const Index = () => {
 
               {excelData && (
                 <>
-                  {/* <section
-                    className={`mb-8 ${currentStep === 2 ? "block" : "hidden"}`}
-                  >
-                    <h2 className="text-xl font-semibold mb-4">
-                      Step 2: Process Data
-                    </h2>
-                    <div className="space-y-6">
-                      <DataPreview data={excelData} />
-
-                      <div className="flex justify-center">
-                        <ArrowDown className="text-gray-400" />
-                      </div>
-
-                      <div className="flex justify-end mt-4">
-                        <Button
-                          variant="outline"
-                          onClick={() => setCurrentStep(1)}
-                          className="mr-2"
-                        >
-                          Back to Upload
-                        </Button>
-                        <Button
-                          onClick={() => setCurrentStep(3)}
-                          disabled={isProcessing}
-                        >
-                          See XML Output
-                        </Button>
-                      </div>
-                    </div>
-                  </section> */}
-
                   <section
                     className={`mb-8 ${currentStep === 2 ? "block" : "hidden"}`}
                   >
@@ -276,6 +185,10 @@ const Index = () => {
 
             <TabsContent value="query" className="mt-6">
               <DataQuery />
+            </TabsContent>
+
+            <TabsContent value="changes" className="mt-6">
+              <DataChanges />
             </TabsContent>
           </Tabs>
         </div>
