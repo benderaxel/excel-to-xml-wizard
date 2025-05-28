@@ -130,8 +130,11 @@ export const DataChanges = () => {
 
   const [market, setMarket] = useState("");
   const [graphProperty, setGraphProperty] = useState("");
+  const [maker, setMaker] = useState("");
+
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [marketOptions, setMarketOptions] = useState<string[]>(defaultMarket);
+  const [makerData, setMakerData] = useState<string[]>([]);
   const [graphProperties, setGraphProperties] =
     useState<Record<string, string>>(defaultProperties);
 
@@ -178,10 +181,21 @@ export const DataChanges = () => {
 
   const handleSetGraphProperty = (value: string) => {
     setGraphProperty(value);
+    getMakerData(value);
+  };
+
+  const getMakerData = async (value: string) => {
+    const marketsResponse = await fetchMarketOptions(sessionId, value);
+
+    if (marketsResponse.success && marketsResponse.data) {
+      setMakerData(
+        Array.isArray(marketsResponse.data) ? marketsResponse.data : []
+      );
+    }
   };
 
   const handleSubmit = () => {
-    if (!graphProperty || !market) {
+    if (!graphProperty && !market && !maker) {
       toast({
         title: "Error",
         description: "Please select both a graph property and a market.",
@@ -190,8 +204,15 @@ export const DataChanges = () => {
       return;
     }
 
-    // Here you would typically handle the submission logic, e.g., sending data to an API
-    console.log("Submitting:", { graphProperty, market });
+    const data = {
+      key_properties: [graphProperty, "for_market"],
+      key_property_values: {
+        for_market: market,
+        [graphProperty]: maker,
+      },
+    };
+
+    console.log("Submitting:", data);
   };
 
   return (
@@ -285,9 +306,9 @@ export const DataChanges = () => {
           <div className="w-full space-y-2">
             <Label htmlFor="maker">Maker</Label>
             <Select
-              value={market}
-              onValueChange={setMarket}
-              disabled={isLoadingOptions}
+              value={maker}
+              onValueChange={setMaker}
+              disabled={!graphProperty && isLoadingOptions}
             >
               <SelectTrigger id="maker" className="w-full">
                 {isLoadingOptions ? (
@@ -296,12 +317,12 @@ export const DataChanges = () => {
                     <span>Loading...</span>
                   </div>
                 ) : (
-                  <SelectValue placeholder="Select a market" />
+                  <SelectValue placeholder="Select a maker" />
                 )}
               </SelectTrigger>
               <SelectContent>
-                {marketOptions && marketOptions.length > 0 ? (
-                  marketOptions.map((marketOption) => (
+                {makerData && makerData.length > 0 ? (
+                  makerData.map((marketOption) => (
                     <SelectItem
                       key={marketOption}
                       value={marketOption}
@@ -311,8 +332,8 @@ export const DataChanges = () => {
                     </SelectItem>
                   ))
                 ) : (
-                  <SelectItem value="no-markets" disabled>
-                    No markets available
+                  <SelectItem value="no-marker" disabled>
+                    No maker available
                   </SelectItem>
                 )}
               </SelectContent>

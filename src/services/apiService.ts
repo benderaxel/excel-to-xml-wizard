@@ -167,7 +167,7 @@ export const queryDataGraph = async (
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
       mode: "cors",
@@ -199,11 +199,14 @@ export const queryDataGraph = async (
   }
 };
 
-export async function fetchMarketOptions(sessionId: string) {
+export async function fetchMarketOptions(
+  sessionId: string,
+  propertyId: string = "for_market"
+) {
   try {
     // /api/v2/property-values/{session_id}/{property_id}
     const response = await fetch(
-      `${configStore.getApiUrl()}/api/v2/property-values/${sessionId}/for_market`
+      `${configStore.getApiUrl()}/api/v2/property-values/${sessionId}/${propertyId}`
     );
 
     if (!response.ok) {
