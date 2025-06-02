@@ -23,7 +23,7 @@ services:
     networks:
       - app-network
     environment:
-      - MERCEDES_API_URL=http://mercedes:8000
+      - MERCEDES_API_URL=https://c572-109-205-220-22.ngrok-free.app
     restart: unless-stopped
 
 networks:
