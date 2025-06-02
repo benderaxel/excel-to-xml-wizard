@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
-import XmlOutput from "@/components/XmlOutput";
 import DataQuery from "@/components/DataQuery";
-import { ExcelData } from "@/utils/excelParser";
-import { ArrowDown, Cog, Database, Diff } from "lucide-react";
+import { Cog, Database, Diff, Upload } from "lucide-react";
 import { checkServerHealth } from "@/services/apiService";
 import { configStore } from "@/utils/configStore";
 import ServerConfig from "@/components/ServerConfig";
@@ -116,8 +114,8 @@ const Index = () => {
           >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="excel" className="flex items-center gap-2">
-                <ArrowDown className="h-4 w-4" />
-                Excel Processing
+                <Upload className="h-4 w-4" />
+                Upload excel file(s)
               </TabsTrigger>
               <TabsTrigger value="query" className="flex items-center gap-2">
                 <Database className="h-4 w-4" />
@@ -133,12 +131,7 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="excel" className="mt-6">
-              <section className="mb-8">
-                <h2 className="text-xl font-semibold mb-4">
-                  Upload Excel Files
-                </h2>
-                <FileUpload onShowConfig={() => setShowConfigModal(true)} />
-              </section>
+              <FileUpload onShowConfig={() => setShowConfigModal(true)} />
             </TabsContent>
 
             <TabsContent value="query" className="mt-6">

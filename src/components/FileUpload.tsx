@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Upload, FileText, Check, Settings, X, Server } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -241,8 +241,13 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
 
   return (
     <Card className="w-full">
-      <CardContent className="pt-6">
-        <div className="flex justify-end mb-2">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Upload Excel File(s)
+          </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -252,8 +257,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
             <Settings className="h-4 w-4" />
             Server Config
           </Button>
-        </div>
-
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-6">
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             isDragging ? "border-blue-500 bg-blue-50" : "border-gray-300"
@@ -277,7 +283,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
                 <>
                   <FileText className="h-12 w-12 text-blue-500" />
                   <p className="font-medium text-gray-900">
-                    {fileStatuses.length} file(s) selected
+                    {fileStatuses.length} file(s) uploaded
                   </p>
                   <div className="text-sm">
                     {fileStatuses.some((f) => f.isProcessing) && (

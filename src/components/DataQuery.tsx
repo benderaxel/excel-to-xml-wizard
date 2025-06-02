@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSession } from "@/hooks/useSession";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 const DEFAULT_BUILD_LINE = "254";
 const DEFAULT_MARKET = "USA/CND";
@@ -204,10 +205,7 @@ const DataQuery: React.FC = () => {
             >
               <SelectTrigger id="market" className="w-full">
                 {isLoadingOptions ? (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Loading...</span>
-                  </div>
+                  <LoadingSpinner />
                 ) : (
                   <SelectValue placeholder="Select a market" />
                 )}
@@ -242,10 +240,7 @@ const DataQuery: React.FC = () => {
           >
             <SelectTrigger id="graphProperty" className="w-full">
               {isLoadingOptions ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Loading...</span>
-                </div>
+                <LoadingSpinner />
               ) : (
                 <SelectValue placeholder="Select a graph property" />
               )}
@@ -294,6 +289,8 @@ const DataQuery: React.FC = () => {
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Querying...
               </>
+            ) : isLoadingOptions ? (
+              <LoadingSpinner showText={false} />
             ) : (
               <>
                 <Search className="h-4 w-4" />

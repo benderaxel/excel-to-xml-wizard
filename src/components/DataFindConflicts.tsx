@@ -21,6 +21,7 @@ import {
   FindConflictsDataResult,
   type ComparisonItem,
 } from "./FindConflictsDataResult";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 const defaultProperties = {
   modelljahrcode: "Modelljahr-Code",
@@ -632,10 +633,7 @@ export const DataFindConflicts = () => {
               >
                 <SelectTrigger id="maker" className="w-full">
                   {isLoadingOptions ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Loading...</span>
-                    </div>
+                    <LoadingSpinner />
                   ) : (
                     <SelectValue placeholder="Select a maker" />
                   )}
@@ -660,34 +658,51 @@ export const DataFindConflicts = () => {
               </Select>
             </div>
 
-            <Button className="w-fit self-end" onClick={handleSubmit}>
-              Submit
+            <Button
+              className="w-fit self-end"
+              onClick={handleSubmit}
+              disabled={isLoadingOptions}
+            >
+              {isLoadingOptions ? (
+                <LoadingSpinner showText={false} />
+              ) : (
+                "submit"
+              )}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle>Conflicts Results</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoadingFindConflictsData ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Finding conflicts...
-              </p>
-            </div>
-          ) : findConflictsData ? (
-            <FindConflictsDataResult data={findConflictsData} />
-          ) : (
-            <div className="text-center text-muted-foreground py-8">
-              Select options to find conflicts.
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Only show the results card when loading or when data exists */}
+      {(isLoadingFindConflictsData || findConflictsData) && (
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>
+              {isLoadingFindConflictsData
+                ? "Finding Conflicts..."
+                : findConflictsData && findConflictsData.length > 0
+                ? `Conflicts Results (${findConflictsData.length})`
+                : "No Conflicts Found"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isLoadingFindConflictsData ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <LoadingSpinner showText={false} />
+                <p className="text-sm text-muted-foreground">
+                  Finding conflicts...
+                </p>
+              </div>
+            ) : findConflictsData && findConflictsData.length > 0 ? (
+              <FindConflictsDataResult data={findConflictsData} />
+            ) : (
+              <div className="text-center text-muted-foreground py-8">
+                No conflicts found for the selected criteria.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
