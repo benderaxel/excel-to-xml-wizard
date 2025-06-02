@@ -1,6 +1,5 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Diff, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -46,16 +45,14 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
         <Card key={index} className="overflow-hidden">
           <CardHeader className="bg-muted/50">
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Diff className="h-5 w-5" />
               Conflicts for{" "}
               {Object.entries(item.shared_key_properties).map(
                 ([key, value], i, arr) => (
-                  <React.Fragment key={key}>
-                    <Badge variant="outline" className="font-mono">
+                  <div key={key} className="flex items-center gap-1">
+                    <Badge variant="outline" className="font-mono bg-white">
                       {key}: {value}
                     </Badge>
-                    {i < arr.length - 1 && ", "}
-                  </React.Fragment>
+                  </div>
                 )
               )}
             </CardTitle>
