@@ -119,7 +119,7 @@ const Index = () => {
               </TabsTrigger>
               <TabsTrigger value="query" className="flex items-center gap-2">
                 <Database className="h-4 w-4" />
-                Select Data
+                Query Data
               </TabsTrigger>
               <TabsTrigger
                 value="conflicts"

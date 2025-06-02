@@ -181,7 +181,7 @@ const DataQuery: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Database className="h-5 w-5" />
-          Select Data
+          Query Data
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
