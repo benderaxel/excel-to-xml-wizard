@@ -540,7 +540,7 @@ export const DataFindConflicts = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Diff className="h-5 w-5" />
-            View changes
+            Find conflicts
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -676,14 +676,14 @@ export const DataFindConflicts = () => {
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
               <p className="text-sm text-muted-foreground">
-                Loading conflicts data...
+                Finding conflicts...
               </p>
             </div>
           ) : findConflictsData ? (
             <FindConflictsDataResult data={findConflictsData} />
           ) : (
             <div className="text-center text-muted-foreground py-8">
-              Submit your selection to see conflicts results
+              Select options to find conflicts.
             </div>
           )}
         </CardContent>

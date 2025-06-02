@@ -44,7 +44,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col justify-between min-h-screen bg-gray-50">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm py-6">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between">
@@ -105,8 +105,8 @@ const Index = () => {
         </div>
       ) : null}
 
-      <main className="container mx-auto px-4 py-8 h-full">
-        <div className="max-w-4xl mx-auto">
+      <main className="container mx-auto px-4 py-8 flex-grow">
+        <div className="mx-auto">
           <Tabs
             value={activeTab}
             onValueChange={(val) =>
@@ -152,7 +152,7 @@ const Index = () => {
         </div>
       </main>
 
-      <footer className="bg-white border-t py-6 mt-12">
+      <footer className="bg-white border-t py-6 mt-auto">
         <div className="container mx-auto px-4 text-center text-sm text-gray-500">
           Aleido - Mercedes Data Navigator &copy; {new Date().getFullYear()}
         </div>

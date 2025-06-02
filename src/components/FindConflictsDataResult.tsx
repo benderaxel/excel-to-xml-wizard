@@ -61,7 +61,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-1/3">Property</TableHead>
@@ -73,7 +73,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                 {Object.entries(item.conflicting_properties).map(
                   ([property, values]) => (
                     <TableRow key={property}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium break-all">
                         <div className="flex items-center gap-2">
                           {property}
                           {values.some((v) => v.includes("LCR:")) && (
@@ -96,10 +96,10 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                           key={i}
                           className={cn(
                             value === "" && "text-muted-foreground italic",
-                            values[0] !== values[1] && "relative"
+                            values[0] !== values[1] && "relative break-all"
                           )}
                         >
-                          {value === "" ? "Empty value" : value}
+                          {value === "" ? "No change" : value}
                         </TableCell>
                       ))}
                     </TableRow>

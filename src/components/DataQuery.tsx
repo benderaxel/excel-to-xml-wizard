@@ -312,7 +312,7 @@ const DataQuery: React.FC = () => {
         {queryResult && queryResult.rows.length > 0 && (
           <div className="mt-6 overflow-x-auto">
             <h3 className="text-lg font-medium mb-2">Query Results</h3>
-            <Table>
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
                   {queryResult.headers.map((header, index) => (
