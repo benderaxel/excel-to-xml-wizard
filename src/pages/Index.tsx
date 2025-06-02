@@ -1,29 +1,22 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/FileUpload";
-import DataPreview from "@/components/DataPreview";
-import ParameterSelection from "@/components/ParameterSelection";
 import XmlOutput from "@/components/XmlOutput";
 import DataQuery from "@/components/DataQuery";
 import { ExcelData } from "@/utils/excelParser";
-import { ArrowDown, Server, Cog, Database, Diff } from "lucide-react";
+import { ArrowDown, Cog, Database, Diff } from "lucide-react";
 import { checkServerHealth } from "@/services/apiService";
 import { configStore } from "@/utils/configStore";
 import ServerConfig from "@/components/ServerConfig";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { DataChanges } from "@/components/DataChanges";
+import { DataFindConflicts } from "@/components/DataFindConflicts";
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [excelData, setExcelData] = useState<ExcelData | null>(null);
-  const [selectedParameters, setSelectedParameters] = useState<string[]>([]);
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<"excel" | "query" | "changes">(
+  const [activeTab, setActiveTab] = useState<"excel" | "query" | "conflicts">(
     "excel"
   );
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // Check server status on component mount
   useEffect(() => {
@@ -39,12 +32,6 @@ const Index = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  const handleFileProcessed = (data: ExcelData) => {
-    setExcelData(data);
-    setSelectedParameters([]); // Reset selected parameters
-    setCurrentStep(2); // Move to step 2 after successful upload
-  };
 
   const getConnectionInfo = () => {
     if (configStore.ngrokUrl) {
@@ -123,7 +110,7 @@ const Index = () => {
           <Tabs
             value={activeTab}
             onValueChange={(val) =>
-              setActiveTab(val as "excel" | "query" | "changes")
+              setActiveTab(val as "excel" | "query" | "conflicts")
             }
             className="w-full mb-8"
           >
@@ -136,59 +123,30 @@ const Index = () => {
                 <Database className="h-4 w-4" />
                 Select Data
               </TabsTrigger>
-              <TabsTrigger value="changes" className="flex items-center gap-2">
+              <TabsTrigger
+                value="conflicts"
+                className="flex items-center gap-2"
+              >
                 <Diff className="h-4 w-4" />
-                View changes
+                Find conflicts
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="excel" className="mt-6">
-              <section
-                className={`mb-8 ${currentStep === 1 ? "block" : "hidden"}`}
-              >
+              <section className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">
                   Upload Excel Files
                 </h2>
-                <FileUpload
-                  onFileProcessed={handleFileProcessed}
-                  onShowConfig={() => setShowConfigModal(true)}
-                />
+                <FileUpload onShowConfig={() => setShowConfigModal(true)} />
               </section>
-
-              {excelData && (
-                <>
-                  <section
-                    className={`mb-8 ${currentStep === 2 ? "block" : "hidden"}`}
-                  >
-                    <h2 className="text-xl font-semibold mb-4">
-                      Step 2: XML Output
-                    </h2>
-                    <div className="space-y-6">
-                      <XmlOutput
-                        data={excelData}
-                        selectedParameters={selectedParameters}
-                      />
-
-                      <div className="flex justify-between">
-                        <Button
-                          variant="outline"
-                          onClick={() => setCurrentStep(1)}
-                        >
-                          Back to Process Data
-                        </Button>
-                      </div>
-                    </div>
-                  </section>
-                </>
-              )}
             </TabsContent>
 
             <TabsContent value="query" className="mt-6">
               <DataQuery />
             </TabsContent>
 
-            <TabsContent value="changes" className="mt-6">
-              <DataChanges />
+            <TabsContent value="conflicts" className="mt-6">
+              <DataFindConflicts />
             </TabsContent>
           </Tabs>
         </div>

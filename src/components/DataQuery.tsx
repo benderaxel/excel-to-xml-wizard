@@ -123,6 +123,15 @@ const DataQuery: React.FC = () => {
     setQueryResult(null);
     setQueryError(null);
 
+    if (!graphProperty && !market && !buildLine) {
+      toast({
+        title: "Error",
+        description: "Please select both a graph property and a market.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const body = {
         build_line: buildLine,

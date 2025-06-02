@@ -1,4 +1,4 @@
-import { DataChangeRequest } from "@/components/DataChanges";
+import { DataChangeRequest } from "@/components/DataFindConflicts";
 import { configStore } from "../utils/configStore";
 import { ExcelData, parseExcelFile } from "../utils/excelParser";
 

@@ -31,7 +31,7 @@ type ComparisonResultsProps = {
   data: ComparisonItem[];
 };
 
-export const ComparisonResults = ({ data }: ComparisonResultsProps) => {
+export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
   if (!data || data.length === 0) {
     return null;
   }

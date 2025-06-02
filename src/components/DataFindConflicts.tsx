@@ -17,7 +17,10 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { ComparisonItem, ComparisonResults } from "./ComparisonResult";
+import {
+  FindConflictsDataResult,
+  type ComparisonItem,
+} from "./FindConflictsDataResult";
 
 const defaultProperties = {
   modelljahrcode: "Modelljahr-Code",
@@ -419,7 +422,7 @@ export type DataChangeRequest = {
   };
 };
 
-export const DataChanges = () => {
+export const DataFindConflicts = () => {
   const { sessionId } = useSession();
   const { toast } = useToast();
 
@@ -428,13 +431,15 @@ export const DataChanges = () => {
   const [maker, setMaker] = useState("");
 
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
-  const [isLoadingCompareData, setIsLoadingCompareData] = useState(false);
+  const [isLoadingFindConflictsData, setIsLoadingFindConflictsData] =
+    useState(false);
   const [marketOptions, setMarketOptions] = useState<string[]>([]);
   const [makerData, setMakerData] = useState<string[]>([]);
   const [graphProperties, setGraphProperties] = useState<
     Record<string, string>
   >({});
-  const [compareData, setCompareData] = useState<ComparisonItem[]>(null);
+  const [findConflictsData, setFindConflictsData] =
+    useState<ComparisonItem[]>(null);
 
   useEffect(() => {
     const loadOptions = async () => {
@@ -503,7 +508,7 @@ export const DataChanges = () => {
     }
 
     try {
-      setIsLoadingCompareData(true); // Set loading state to true before fetch
+      setIsLoadingFindConflictsData(true); // Set loading state to true before fetch
       const data = {
         key_properties: [graphProperty, "for_market"],
         key_property_values: {
@@ -515,7 +520,7 @@ export const DataChanges = () => {
       const compareResponse = await fetchFindConflictsData(sessionId, data);
 
       if (compareResponse.success && compareResponse.data) {
-        setCompareData(compareResponse.data);
+        setFindConflictsData(compareResponse.data);
       }
     } catch (error) {
       toast({
@@ -523,9 +528,9 @@ export const DataChanges = () => {
         description: "Failed to load comparison data. Please try again.",
         variant: "destructive",
       });
-      setCompareData(null); // Reset data on error
+      setFindConflictsData(null); // Reset data on error
     } finally {
-      setIsLoadingCompareData(false); // Set loading state to false after fetch completes
+      setIsLoadingFindConflictsData(false); // Set loading state to false after fetch completes
     }
   };
 
@@ -664,21 +669,21 @@ export const DataChanges = () => {
 
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Comparison Results</CardTitle>
+          <CardTitle>Conflicts Results</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoadingCompareData ? (
+          {isLoadingFindConflictsData ? (
             <div className="flex flex-col items-center justify-center py-8">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
               <p className="text-sm text-muted-foreground">
-                Loading comparison data...
+                Loading conflicts data...
               </p>
             </div>
-          ) : compareData ? (
-            <ComparisonResults data={compareData} />
+          ) : findConflictsData ? (
+            <FindConflictsDataResult data={findConflictsData} />
           ) : (
             <div className="text-center text-muted-foreground py-8">
-              Submit your selection to see comparison results
+              Submit your selection to see conflicts results
             </div>
           )}
         </CardContent>
