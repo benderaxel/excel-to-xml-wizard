@@ -118,7 +118,7 @@ const Index = () => {
         </div>
       ) : null}
 
-      <main className="container mx-auto px-4 py-8 h-[680px]">
+      <main className="container mx-auto px-4 py-8 h-full">
         <div className="max-w-4xl mx-auto">
           <Tabs
             value={activeTab}

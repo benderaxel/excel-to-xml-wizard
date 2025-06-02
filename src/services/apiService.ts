@@ -1,3 +1,4 @@
+import { DataChangeRequest } from "@/components/DataChanges";
 import { configStore } from "../utils/configStore";
 import { ExcelData, parseExcelFile } from "../utils/excelParser";
 
@@ -255,6 +256,46 @@ export async function fetchGraphProperties(sessionId: string) {
         error instanceof Error
           ? error.message
           : "Failed to fetch graph properties",
+    };
+  }
+}
+
+export async function fetchFindConflictsData(
+  sessionId: string,
+  body: DataChangeRequest
+) {
+  try {
+    const apiUrl = `${configStore.getApiUrl()}/api/v2/find-conflicts/${sessionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+      mode: "cors",
+      credentials: "omit", // Change from 'include' to 'omit'
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      message: "fetchCompareData executed successfully",
+      data: result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred during data comparison",
     };
   }
 }

@@ -124,11 +124,6 @@ const DataQuery: React.FC = () => {
     setQueryError(null);
 
     try {
-      // const query = `build_line=${encodeURIComponent(
-      //   buildLine
-      // )}&market=${encodeURIComponent(
-      //   market
-      // )}&graph_property=${encodeURIComponent(graphProperty)}`;
       const body = {
         build_line: buildLine,
         market: market,
