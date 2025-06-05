@@ -110,7 +110,7 @@ const Index = () => {
             onValueChange={(val) =>
               setActiveTab(val as "excel" | "query" | "conflicts")
             }
-            className="w-full mb-8"
+            className="w-full"
           >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="excel" className="flex items-center gap-2">

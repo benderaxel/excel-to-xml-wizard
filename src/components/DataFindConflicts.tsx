@@ -666,7 +666,7 @@ export const DataFindConflicts = () => {
               {isLoadingOptions ? (
                 <LoadingSpinner showText={false} />
               ) : (
-                "submit"
+                "Find conflicts"
               )}
             </Button>
           </div>
