@@ -11,7 +11,7 @@ import { DataFindConflicts } from "@/components/DataFindConflicts";
 
 const Index = () => {
   const [serverStatus, setServerStatus] = useState<boolean | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"excel" | "query" | "conflicts">(
     "excel"
   );
