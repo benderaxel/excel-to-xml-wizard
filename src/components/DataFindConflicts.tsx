@@ -121,7 +121,7 @@ export const DataFindConflicts = () => {
         key_properties: [graphProperty, "for_market"],
         key_property_values: {
           for_market: market,
-          [graphProperty]: maker,
+          ...(maker ? { [graphProperty]: maker } : {}),
         },
       };
 
