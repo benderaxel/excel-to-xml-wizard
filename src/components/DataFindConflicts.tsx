@@ -544,7 +544,7 @@ export const DataFindConflicts = () => {
             Find conflicts
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="flex flex-col gap-6">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
               <div className="w-full space-y-2">
@@ -659,7 +659,7 @@ export const DataFindConflicts = () => {
             </div>
 
             <Button
-              className="w-fit self-end"
+              className="w-fit self-end min-w-28"
               onClick={handleSubmit}
               disabled={isLoadingOptions}
             >

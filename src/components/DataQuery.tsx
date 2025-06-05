@@ -184,7 +184,7 @@ const DataQuery: React.FC = () => {
           Query Data
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="buildLine">Build Line</Label>
@@ -265,7 +265,7 @@ const DataQuery: React.FC = () => {
           </Select>
         </div>
 
-        <div className="flex justify-between mt-4">
+        <div className="flex justify-between">
           <Button
             variant="outline"
             onClick={resetForm}
@@ -282,7 +282,7 @@ const DataQuery: React.FC = () => {
               !market ||
               !graphProperty
             }
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 min-w-28"
           >
             {isQuerying ? (
               <>

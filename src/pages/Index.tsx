@@ -103,14 +103,14 @@ const Index = () => {
         </div>
       ) : null}
 
-      <main className="container mx-auto px-4 py-8 flex-grow">
+      <main className="container px-4 py-8 flex-grow">
         <div className="mx-auto">
           <Tabs
             value={activeTab}
             onValueChange={(val) =>
               setActiveTab(val as "excel" | "query" | "conflicts")
             }
-            className="w-full"
+            className="flex flex-col w-full gap-6"
           >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="excel" className="flex items-center gap-2">
@@ -130,15 +130,15 @@ const Index = () => {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="excel" className="mt-6">
+            <TabsContent value="excel">
               <FileUpload onShowConfig={() => setShowConfigModal(true)} />
             </TabsContent>
 
-            <TabsContent value="query" className="mt-6">
+            <TabsContent value="query">
               <DataQuery />
             </TabsContent>
 
-            <TabsContent value="conflicts" className="mt-6">
+            <TabsContent value="conflicts">
               <DataFindConflicts />
             </TabsContent>
           </Tabs>
