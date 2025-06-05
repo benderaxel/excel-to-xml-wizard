@@ -162,21 +162,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Excel File(s)
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onShowConfig}
-            className="flex items-center gap-1"
-          >
-            <Settings className="h-4 w-4" />
-            Server Config
-          </Button>
+        <CardTitle className="flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Upload Excel File(s)
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6">

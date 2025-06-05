@@ -270,6 +270,7 @@ const DataQuery: React.FC = () => {
             variant="outline"
             onClick={resetForm}
             disabled={isLoadingOptions}
+            className="hover:text-white"
           >
             Reset to Defaults
           </Button>
@@ -294,7 +295,7 @@ const DataQuery: React.FC = () => {
             ) : (
               <>
                 <Search className="h-4 w-4" />
-                Execute Query
+                Query
               </>
             )}
           </Button>
