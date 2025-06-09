@@ -168,7 +168,7 @@ export const DataFindConflicts = () => {
                         <span>Loading...</span>
                       </div>
                     ) : (
-                      <SelectValue placeholder="Select a graph property" />
+                      <SelectValue placeholder="Select graph property" />
                     )}
                   </SelectTrigger>
                   <SelectContent>
@@ -207,7 +207,7 @@ export const DataFindConflicts = () => {
                         <span>Loading...</span>
                       </div>
                     ) : (
-                      <SelectValue placeholder="Select a market" />
+                      <SelectValue placeholder="Select market" />
                     )}
                   </SelectTrigger>
                   <SelectContent>
@@ -242,7 +242,7 @@ export const DataFindConflicts = () => {
                   {isLoadingOptions ? (
                     <LoadingSpinner />
                   ) : (
-                    <SelectValue placeholder="Select a model" />
+                    <SelectValue placeholder="Select model" />
                   )}
                 </SelectTrigger>
                 <SelectContent>
