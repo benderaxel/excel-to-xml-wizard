@@ -10,20 +10,16 @@ import {
 } from "./ui/table";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
-import { cn } from "@/lib/utils";
 
-// Define interfaces for the comparison data
-type SharedKeyProperties = {
-  [key: string]: string;
-};
-
-type ConflictingProperty = {
-  [key: string]: string[];
+type VersionItem = {
+  value: string;
+  models: string[];
 };
 
 export type ComparisonItem = {
-  shared_key_properties: SharedKeyProperties;
-  conflicting_properties: ConflictingProperty;
+  property: string;
+  version1: VersionItem[];
+  version2: VersionItem[];
 };
 
 type ComparisonResultsProps = {
@@ -38,75 +34,140 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
   return (
     <div className="space-y-6">
       <p className="text-muted-foreground">
-        Found {data.length} items with conflicting properties
+        Found {data.length} properties with conflicts between versions
       </p>
 
-      {data.map((item, index) => (
-        <Card key={index} className="overflow-hidden">
-          <CardHeader className="bg-muted/50">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              Conflicts for{" "}
-              {Object.entries(item.shared_key_properties).map(
-                ([key, value], i, arr) => (
-                  <div key={key} className="flex items-center gap-1">
-                    <Badge variant="outline" className="font-mono bg-white">
-                      {key}: {value}
-                    </Badge>
-                  </div>
-                )
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <Table className="table-fixed">
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-1/3">Property</TableHead>
-                  <TableHead>Value 1</TableHead>
-                  <TableHead>Value 2</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Object.entries(item.conflicting_properties).map(
-                  ([property, values]) => (
-                    <TableRow key={property}>
-                      <TableCell className="font-medium break-all">
-                        <div className="flex items-center gap-2">
-                          {property}
-                          {values.some((v) => v.includes("LCR:")) && (
-                            <Tooltip>
-                              <TooltipTrigger>
-                                <Info className="h-4 w-4 text-muted-foreground" />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-xs">
-                                  This property contains conditional logic
-                                  expressions (LCR)
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-muted/50">
+          <CardTitle>Property Conflicts</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <Table className="table-fixed">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-1/3">Property</TableHead>
+                <TableHead className="w-1/3">Version 1</TableHead>
+                <TableHead className="w-1/3">Version 2</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((item, index) => (
+                <TableRow
+                  key={index}
+                  className={index % 2 === 0 ? "bg-muted/20" : ""}
+                >
+                  <TableCell className="align-top font-medium border-r">
+                    {item.property}
+                  </TableCell>
+                  <TableCell className="align-top border-r">
+                    {item.version1.map((valueObj, i) => (
+                      <div
+                        key={i}
+                        className={i > 0 ? "mt-4 pt-4 border-t" : ""}
+                      >
+                        <div className="font-medium break-all mb-1">
+                          <div className="flex items-center gap-2">
+                            {valueObj.value === "" ? (
+                              <span className="text-muted-foreground italic">
+                                No value
+                              </span>
+                            ) : (
+                              <>
+                                {valueObj.value}
+                                {valueObj.value.includes("LCR:") && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <Info className="h-4 w-4 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs">
+                                        This property contains conditional logic
+                                        expressions (LCR)
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 items-center text-sm text-muted-foreground">
+                          Models:{" "}
+                          {valueObj.models.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {valueObj.models.map((model) => (
+                                <Badge
+                                  variant="outline"
+                                  key={model}
+                                  className="font-mono"
+                                >
+                                  {model}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="italic">None</span>
                           )}
                         </div>
-                      </TableCell>
-                      {values.map((value, i) => (
-                        <TableCell
-                          key={i}
-                          className={cn(
-                            value === "" && "text-muted-foreground italic",
-                            values[0] !== values[1] && "relative break-all"
+                      </div>
+                    ))}
+                  </TableCell>
+                  <TableCell className="flex flex-col gap-4">
+                    {item.version2.map((valueObj, i) => (
+                      <div key={i} className={i > 0 ? "pt-4 border-t" : ""}>
+                        <div className="font-medium break-all mb-1">
+                          <div className="flex items-center gap-2">
+                            {valueObj.value === "" ? (
+                              <span className="text-muted-foreground italic">
+                                No value
+                              </span>
+                            ) : (
+                              <>
+                                {valueObj.value}
+                                {valueObj.value.includes("LCR:") && (
+                                  <Tooltip>
+                                    <TooltipTrigger>
+                                      <Info className="h-4 w-4 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p className="max-w-xs">
+                                        This property contains conditional logic
+                                        expressions (LCR)
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2 items-center text-sm text-muted-foreground">
+                          Models:{" "}
+                          {valueObj.models.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {valueObj.models.map((model) => (
+                                <Badge
+                                  variant="outline"
+                                  key={model}
+                                  className="font-mono"
+                                >
+                                  {model}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="italic">None</span>
                           )}
-                        >
-                          {value === "" ? "No change" : value}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  )
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      ))}
+                        </div>
+                      </div>
+                    ))}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };
