@@ -37,13 +37,13 @@ export const DataFindConflicts = () => {
 
   const [market, setMarket] = useState("");
   const [graphProperty, setGraphProperty] = useState("");
-  const [maker, setMaker] = useState("");
+  const [model, setModel] = useState("");
 
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
   const [isLoadingFindConflictsData, setIsLoadingFindConflictsData] =
     useState(false);
   const [marketOptions, setMarketOptions] = useState<string[]>([]);
-  const [makerData, setMakerData] = useState<string[]>([]);
+  const [modelData, setModelData] = useState<string[]>([]);
   const [graphProperties, setGraphProperties] = useState<
     Record<string, string>
   >({});
@@ -92,21 +92,21 @@ export const DataFindConflicts = () => {
 
   const handleSetGraphProperty = (value: string) => {
     setGraphProperty(value);
-    getMakerData(value);
+    getModelData(value);
   };
 
-  const getMakerData = async (value: string) => {
+  const getModelData = async (value: string) => {
     const marketsResponse = await fetchMarketOptions(sessionId, value);
 
     if (marketsResponse.success && marketsResponse.data) {
-      setMakerData(
+      setModelData(
         Array.isArray(marketsResponse.data) ? marketsResponse.data : []
       );
     }
   };
 
   const handleSubmit = async () => {
-    if (!graphProperty && !market && !maker) {
+    if (!graphProperty && !market && !model) {
       toast({
         title: "Error",
         description: "Please select both a graph property and a market.",
@@ -116,12 +116,12 @@ export const DataFindConflicts = () => {
     }
 
     try {
-      setIsLoadingFindConflictsData(true); // Set loading state to true before fetch
+      setIsLoadingFindConflictsData(true);
       const data = {
         key_properties: [graphProperty, "for_market"],
         key_property_values: {
           for_market: market,
-          ...(maker ? { [graphProperty]: maker } : {}),
+          ...(model ? { [graphProperty]: model } : {}),
         },
       };
 
@@ -232,22 +232,22 @@ export const DataFindConflicts = () => {
             </div>
 
             <div className="w-full space-y-2">
-              <Label htmlFor="maker">Maker</Label>
+              <Label htmlFor="model">Model</Label>
               <Select
-                value={maker}
-                onValueChange={setMaker}
+                value={model}
+                onValueChange={setModel}
                 disabled={!graphProperty && isLoadingOptions}
               >
-                <SelectTrigger id="maker" className="w-full">
+                <SelectTrigger id="model" className="w-full">
                   {isLoadingOptions ? (
                     <LoadingSpinner />
                   ) : (
-                    <SelectValue placeholder="Select a maker" />
+                    <SelectValue placeholder="Select a model" />
                   )}
                 </SelectTrigger>
                 <SelectContent>
-                  {makerData && makerData.length > 0 ? (
-                    makerData.map((marketOption) => (
+                  {modelData && modelData.length > 0 ? (
+                    modelData.map((marketOption) => (
                       <SelectItem
                         key={marketOption}
                         value={marketOption}
@@ -258,7 +258,7 @@ export const DataFindConflicts = () => {
                     ))
                   ) : (
                     <SelectItem value="no-marker" disabled>
-                      No maker available
+                      No model available
                     </SelectItem>
                   )}
                 </SelectContent>
