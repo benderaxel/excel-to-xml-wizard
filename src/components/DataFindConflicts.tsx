@@ -36,7 +36,7 @@ export const DataFindConflicts = () => {
   const { toast } = useToast();
 
   const [market, setMarket] = useState("");
-  const [graphProperty, setGraphProperty] = useState("");
+  // const [graphProperty, setGraphProperty] = useState("");
   const [model, setModel] = useState("");
 
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
@@ -44,9 +44,9 @@ export const DataFindConflicts = () => {
     useState(false);
   const [marketOptions, setMarketOptions] = useState<string[]>([]);
   const [modelData, setModelData] = useState<string[]>([]);
-  const [graphProperties, setGraphProperties] = useState<
-    Record<string, string>
-  >({});
+  // const [graphProperties, setGraphProperties] = useState<
+  //   Record<string, string>
+  // >({});
   const [findConflictsData, setFindConflictsData] =
     useState<ComparisonItem[]>(null);
 
@@ -57,7 +57,20 @@ export const DataFindConflicts = () => {
       try {
         // Fetch market options
         const marketsResponse = await fetchMarketOptions(sessionId);
-        const propertiesResponse = await fetchGraphProperties(sessionId);
+        // const propertiesResponse = await fetchGraphProperties(sessionId);
+
+        const marketsModelResponse = await fetchMarketOptions(
+          sessionId,
+          "Baureihe 4"
+        );
+
+        if (marketsModelResponse.success && marketsModelResponse.data) {
+          setModelData(
+            Array.isArray(marketsModelResponse.data)
+              ? marketsModelResponse.data
+              : []
+          );
+        }
 
         if (marketsResponse.success && marketsResponse.data) {
           setMarketOptions(
@@ -65,13 +78,13 @@ export const DataFindConflicts = () => {
           );
         }
 
-        if (propertiesResponse.success && propertiesResponse.data) {
-          const data =
-            typeof propertiesResponse.data === "object"
-              ? propertiesResponse.data
-              : {};
-          setGraphProperties(data);
-        }
+        // if (propertiesResponse.success && propertiesResponse.data) {
+        //   const data =
+        //     typeof propertiesResponse.data === "object"
+        //       ? propertiesResponse.data
+        //       : {};
+        //   setGraphProperties(data);
+        // }
       } catch (error) {
         toast({
           title: "Warning",
@@ -81,7 +94,7 @@ export const DataFindConflicts = () => {
         });
         // Ensure we have valid default states in case of error
         setMarketOptions([]);
-        setGraphProperties({});
+        // setGraphProperties({});
       } finally {
         setIsLoadingOptions(false);
       }
@@ -90,23 +103,23 @@ export const DataFindConflicts = () => {
     loadOptions();
   }, [toast, sessionId]);
 
-  const handleSetGraphProperty = (value: string) => {
-    setGraphProperty(value);
-    getModelData(value);
-  };
+  // const handleSetGraphProperty = (value: string) => {
+  //   setGraphProperty(value);
+  //   getModelData(value);
+  // };
 
-  const getModelData = async (value: string) => {
-    const marketsResponse = await fetchMarketOptions(sessionId, value);
+  // const getModelData = async (value: string) => {
+  //   const marketsResponse = await fetchMarketOptions(sessionId, value);
 
-    if (marketsResponse.success && marketsResponse.data) {
-      setModelData(
-        Array.isArray(marketsResponse.data) ? marketsResponse.data : []
-      );
-    }
-  };
+  //   if (marketsResponse.success && marketsResponse.data) {
+  //     setModelData(
+  //       Array.isArray(marketsResponse.data) ? marketsResponse.data : []
+  //     );
+  //   }
+  // };
 
   const handleSubmit = async () => {
-    if (!graphProperty && !market && !model) {
+    if (!market && !model) {
       toast({
         title: "Error",
         description: "Please select both a graph property and a market.",
@@ -118,10 +131,12 @@ export const DataFindConflicts = () => {
     try {
       setIsLoadingFindConflictsData(true);
       const data = {
-        key_properties: [graphProperty, "for_market"],
+        key_properties: ["Baureihe 4", "for_market"],
+        // key_properties: [graphProperty, "for_market"],
         key_property_values: {
           for_market: market,
-          ...(model ? { [graphProperty]: model } : {}),
+          // ...(model ? { [graphProperty]: model } : {}),
+          ...(model ? { ["Baureihe 4"]: model } : {}),
         },
       };
 
@@ -155,6 +170,39 @@ export const DataFindConflicts = () => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-4">
               <div className="w-full space-y-2">
+                <Label htmlFor="model">Model</Label>
+                <Select
+                  value={model}
+                  onValueChange={setModel}
+                  disabled={isLoadingOptions}
+                >
+                  <SelectTrigger id="model" className="w-full">
+                    {isLoadingOptions ? (
+                      <LoadingSpinner />
+                    ) : (
+                      <SelectValue placeholder="Select model" />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modelData && modelData.length > 0 ? (
+                      modelData.map((marketOption) => (
+                        <SelectItem
+                          key={marketOption}
+                          value={marketOption}
+                          className="focus:text-white cursor-pointer"
+                        >
+                          {marketOption}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-marker" disabled>
+                        No model available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* <div className="w-full space-y-2">
                 <Label htmlFor="graphProperty">Graph Property</Label>
                 <Select
                   value={graphProperty}
@@ -191,7 +239,7 @@ export const DataFindConflicts = () => {
                     )}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
 
               <div className="w-full space-y-2">
                 <Label htmlFor="market">Market</Label>
@@ -231,7 +279,7 @@ export const DataFindConflicts = () => {
               </div>
             </div>
 
-            <div className="w-full space-y-2">
+            {/* <div className="w-full space-y-2">
               <Label htmlFor="model">Model</Label>
               <Select
                 value={model}
@@ -263,7 +311,7 @@ export const DataFindConflicts = () => {
                   )}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
 
             <Button
               className="w-fit self-end min-w-28"
