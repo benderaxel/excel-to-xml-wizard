@@ -73,8 +73,8 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-1/3">Property</TableHead>
-                <TableHead className="w-1/3">Version 1</TableHead>
-                <TableHead className="w-1/3">Version 2</TableHead>
+                <TableHead className="w-1/3">Old value(s)</TableHead>
+                <TableHead className="w-1/3">New value(s)</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -85,24 +85,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                 >
                   <TableCell className="align-top font-medium border-r">
                     <div className="flex justify-between items-start gap-2">
-                      <div>{item.property}</div>
-                      {item.xml_table && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 hover:text-white"
-                              onClick={() => copyToClipboard(item.xml_table)}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent side="right">
-                            <p>Copy XML</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
+                      {item.property}
                     </div>
                   </TableCell>
                   <TableCell className="align-top border-r">
@@ -148,11 +131,11 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                                       variant="outline"
                                       className="font-mono"
                                     >
-                                      {model.model_number}
+                                      {model.model_name}
                                     </Badge>
                                   </TooltipTrigger>
                                   <TooltipContent>
-                                    <p>{model.model_name}</p>
+                                    <p>{model.model_number}</p>
                                   </TooltipContent>
                                 </Tooltip>
                               ))}
@@ -169,58 +152,68 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                       return (
                         <div
                           key={i}
-                          className={i > 0 ? "mt-4 pt-4 border-t" : ""}
+                          className={
+                            i > 0
+                              ? "mt-4 pt-4 border-t flex gap-2 justify-between items-start"
+                              : "flex gap-2"
+                          }
                         >
-                          <div className="font-medium break-all mb-1">
-                            <div className="flex items-center gap-2">
-                              {valueObj.value === "" ? (
-                                <span className="text-muted-foreground italic">
-                                  No updates
-                                </span>
-                              ) : (
-                                <>
-                                  {valueObj.value}
-                                  {valueObj.value.includes("LCR:") && (
-                                    <Tooltip>
+                          <div>
+                            <div className="font-medium break-all mb-1">
+                              <div className="flex items-center gap-2">
+                                {valueObj.value === "" ? (
+                                  <span className="text-muted-foreground italic">
+                                    No updates
+                                  </span>
+                                ) : (
+                                  <>{valueObj.value}</>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 items-center text-sm text-muted-foreground">
+                              Models:{" "}
+                              {valueObj.models.length > 0 ? (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {valueObj.models.map((model) => (
+                                    <Tooltip key={model.model_number}>
                                       <TooltipTrigger>
-                                        <Info className="h-4 w-4 text-muted-foreground" />
+                                        <Badge
+                                          variant="outline"
+                                          className="font-mono"
+                                        >
+                                          {model.model_name}
+                                        </Badge>
                                       </TooltipTrigger>
                                       <TooltipContent>
-                                        <p className="max-w-xs">
-                                          This property contains conditional
-                                          logic expressions (LCR)
-                                        </p>
+                                        <p>{model.model_number}</p>
                                       </TooltipContent>
                                     </Tooltip>
-                                  )}
-                                </>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="italic">None</span>
                               )}
                             </div>
                           </div>
-                          <div className="flex gap-2 items-center text-sm text-muted-foreground">
-                            Models:{" "}
-                            {valueObj.models.length > 0 ? (
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {valueObj.models.map((model) => (
-                                  <Tooltip key={model.model_number}>
-                                    <TooltipTrigger>
-                                      <Badge
-                                        variant="outline"
-                                        className="font-mono"
-                                      >
-                                        {model.model_number}
-                                      </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>{model.model_name}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="italic">None</span>
-                            )}
-                          </div>
+                          {item.xml_table && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 hover:text-white"
+                                  onClick={() =>
+                                    copyToClipboard(item.xml_table)
+                                  }
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p>Copy XML</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       );
                     })}
