@@ -143,7 +143,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                             <div className="flex flex-wrap gap-1 mt-1">
                               {valueObj.models.map((model) => (
                                 <Tooltip key={model.model_number}>
-                                  <TooltipTrigger asChild>
+                                  <TooltipTrigger>
                                     <Badge
                                       variant="outline"
                                       className="font-mono"
@@ -203,7 +203,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {valueObj.models.map((model) => (
                                   <Tooltip key={model.model_number}>
-                                    <TooltipTrigger asChild>
+                                    <TooltipTrigger>
                                       <Badge
                                         variant="outline"
                                         className="font-mono"
