@@ -24,10 +24,10 @@ import {
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export type DataChangeRequest = {
-  key_properties: string[];
+  key_properties?: string[];
   key_property_values: {
-    for_market: string;
-    [key: string]: string;
+    for_market?: string;
+    ["Baureihe 4"]?: string;
   };
 };
 
@@ -119,23 +119,12 @@ export const DataFindConflicts = () => {
   // };
 
   const handleSubmit = async () => {
-    if (!market && !model) {
-      toast({
-        title: "Error",
-        description: "Please select both a graph property and a market.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       setIsLoadingFindConflictsData(true);
       const data = {
-        key_properties: ["Baureihe 4", "for_market"],
-        // key_properties: [graphProperty, "for_market"],
+        // key_properties: ["Baureihe 4", "for_market"],
         key_property_values: {
-          for_market: market,
-          // ...(model ? { [graphProperty]: model } : {}),
+          ...(market ? { for_market: market } : {}),
           ...(model ? { ["Baureihe 4"]: model } : {}),
         },
       };
@@ -184,6 +173,12 @@ export const DataFindConflicts = () => {
                     )}
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem
+                      value={null}
+                      className="focus:text-white cursor-pointer"
+                    >
+                      All models
+                    </SelectItem>
                     {modelData && modelData.length > 0 ? (
                       modelData.map((marketOption) => (
                         <SelectItem
@@ -259,6 +254,12 @@ export const DataFindConflicts = () => {
                     )}
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem
+                      value={null}
+                      className="focus:text-white cursor-pointer"
+                    >
+                      All markets
+                    </SelectItem>
                     {marketOptions && marketOptions.length > 0 ? (
                       marketOptions.map((marketOption) => (
                         <SelectItem
