@@ -22,6 +22,17 @@ import {
   type ComparisonItem,
 } from "./FindConflictsDataResult";
 import { LoadingSpinner } from "./LoadingSpinner";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "./ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { Checkbox } from "./ui/checkbox";
+import { ChevronDown } from "lucide-react";
 
 export type DataChangeRequest = {
   key_properties?: string[];
@@ -36,7 +47,7 @@ export const DataFindConflicts = () => {
   const { toast } = useToast();
 
   const [market, setMarket] = useState("");
-  // const [graphProperty, setGraphProperty] = useState("");
+  const [graphProperty, setGraphProperty] = useState<string[]>([]);
   const [model, setModel] = useState("");
 
   const [isLoadingOptions, setIsLoadingOptions] = useState(true);
@@ -44,9 +55,9 @@ export const DataFindConflicts = () => {
     useState(false);
   const [marketOptions, setMarketOptions] = useState<string[]>([]);
   const [modelData, setModelData] = useState<string[]>([]);
-  // const [graphProperties, setGraphProperties] = useState<
-  //   Record<string, string>
-  // >({});
+  const [graphProperties, setGraphProperties] = useState<
+    { key: string; value: string }[]
+  >([]);
   const [findConflictsData, setFindConflictsData] =
     useState<ComparisonItem[]>(null);
 
@@ -57,7 +68,7 @@ export const DataFindConflicts = () => {
       try {
         // Fetch market options
         const marketsResponse = await fetchMarketOptions(sessionId);
-        // const propertiesResponse = await fetchGraphProperties(sessionId);
+        const propertiesResponse = await fetchGraphProperties(sessionId);
 
         const marketsModelResponse = await fetchMarketOptions(
           sessionId,
@@ -78,13 +89,21 @@ export const DataFindConflicts = () => {
           );
         }
 
-        // if (propertiesResponse.success && propertiesResponse.data) {
-        //   const data =
-        //     typeof propertiesResponse.data === "object"
-        //       ? propertiesResponse.data
-        //       : {};
-        //   setGraphProperties(data);
-        // }
+        if (propertiesResponse.success && propertiesResponse.data) {
+          const responseData = propertiesResponse.data;
+          // Convert object to array of {key, value} objects
+          if (typeof responseData === "object" && responseData !== null) {
+            const propertyArray = Object.entries(responseData).map(
+              ([key, value]) => ({
+                key,
+                value: String(value),
+              })
+            );
+            setGraphProperties(propertyArray);
+          } else {
+            setGraphProperties([]);
+          }
+        }
       } catch (error) {
         toast({
           title: "Warning",
@@ -94,7 +113,7 @@ export const DataFindConflicts = () => {
         });
         // Ensure we have valid default states in case of error
         setMarketOptions([]);
-        // setGraphProperties({});
+        setGraphProperties([]);
       } finally {
         setIsLoadingOptions(false);
       }
@@ -103,26 +122,11 @@ export const DataFindConflicts = () => {
     loadOptions();
   }, [toast, sessionId]);
 
-  // const handleSetGraphProperty = (value: string) => {
-  //   setGraphProperty(value);
-  //   getModelData(value);
-  // };
-
-  // const getModelData = async (value: string) => {
-  //   const marketsResponse = await fetchMarketOptions(sessionId, value);
-
-  //   if (marketsResponse.success && marketsResponse.data) {
-  //     setModelData(
-  //       Array.isArray(marketsResponse.data) ? marketsResponse.data : []
-  //     );
-  //   }
-  // };
-
   const handleSubmit = async () => {
     try {
       setIsLoadingFindConflictsData(true);
       const data = {
-        // key_properties: ["Baureihe 4", "for_market"],
+        key_properties: graphProperty.length > 0 ? graphProperty : undefined,
         key_property_values: {
           ...(market ? { for_market: market } : {}),
           ...(model ? { ["Baureihe 4"]: model } : {}),
@@ -140,9 +144,9 @@ export const DataFindConflicts = () => {
         description: "Failed to load comparison data. Please try again.",
         variant: "destructive",
       });
-      setFindConflictsData(null); // Reset data on error
+      setFindConflictsData(null);
     } finally {
-      setIsLoadingFindConflictsData(false); // Set loading state to false after fetch completes
+      setIsLoadingFindConflictsData(false);
     }
   };
 
@@ -197,44 +201,6 @@ export const DataFindConflicts = () => {
                   </SelectContent>
                 </Select>
               </div>
-              {/* <div className="w-full space-y-2">
-                <Label htmlFor="graphProperty">Graph Property</Label>
-                <Select
-                  value={graphProperty}
-                  onValueChange={(e) => handleSetGraphProperty(e)}
-                  disabled={isLoadingOptions}
-                >
-                  <SelectTrigger id="graphProperty" className="w-full">
-                    {isLoadingOptions ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Loading...</span>
-                      </div>
-                    ) : (
-                      <SelectValue placeholder="Select graph property" />
-                    )}
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(graphProperties || {})?.length > 0 ? (
-                      Object.entries(graphProperties || {}).map(
-                        ([key, value]) => (
-                          <SelectItem
-                            key={key}
-                            value={value}
-                            className="focus:text-white cursor-pointer"
-                          >
-                            {value}
-                          </SelectItem>
-                        )
-                      )
-                    ) : (
-                      <SelectItem value="no-properties" disabled>
-                        No properties available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div> */}
 
               <div className="w-full space-y-2">
                 <Label htmlFor="market">Market</Label>
@@ -280,39 +246,86 @@ export const DataFindConflicts = () => {
               </div>
             </div>
 
-            {/* <div className="w-full space-y-2">
-              <Label htmlFor="model">Model</Label>
-              <Select
-                value={model}
-                onValueChange={setModel}
-                disabled={!graphProperty && isLoadingOptions}
-              >
-                <SelectTrigger id="model" className="w-full">
-                  {isLoadingOptions ? (
-                    <LoadingSpinner />
-                  ) : (
-                    <SelectValue placeholder="Select model" />
+            <div className="w-full space-y-2">
+              <Label htmlFor="graphProperty">Properties</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between hover:text-white"
+                    disabled={isLoadingOptions}
+                  >
+                    {isLoadingOptions ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Loading...</span>
+                      </div>
+                    ) : graphProperty.length > 0 ? (
+                      <span>{`${graphProperty.length} properties selected`}</span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Select properties...
+                      </span>
+                    )}
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                {graphProperties &&
+                  Array.isArray(graphProperties) &&
+                  graphProperties.length > 0 && (
+                    <PopoverContent className="w-full p-0" align="start">
+                      {graphProperties &&
+                      Array.isArray(graphProperties) &&
+                      graphProperties.length > 0 ? (
+                        <Command>
+                          <CommandInput placeholder="Search properties..." />
+                          <CommandList>
+                            <CommandEmpty>No property found.</CommandEmpty>
+                            <CommandGroup className="max-h-60 overflow-auto">
+                              {graphProperties.map((property) => (
+                                <CommandItem
+                                  key={property.key}
+                                  value={property.value}
+                                  className="hover:cursor-pointer "
+                                  onSelect={() => {
+                                    setGraphProperty((prev) => {
+                                      if (prev.includes(property.key)) {
+                                        return prev.filter(
+                                          (item) => item !== property.key
+                                        );
+                                      }
+                                      return [...prev, property.key];
+                                    });
+                                  }}
+                                >
+                                  <div className="flex items-center gap-2 w-full">
+                                    <Checkbox
+                                      checked={graphProperty.includes(
+                                        property.key
+                                      )}
+                                      className="mr-2"
+                                    />
+                                    <span>{property.value}</span>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      ) : (
+                        <div className="p-4 text-center">
+                          <p className="text-sm text-muted-foreground">
+                            {isLoadingOptions
+                              ? "Loading properties..."
+                              : "No properties available"}
+                          </p>
+                        </div>
+                      )}
+                    </PopoverContent>
                   )}
-                </SelectTrigger>
-                <SelectContent>
-                  {modelData && modelData.length > 0 ? (
-                    modelData.map((marketOption) => (
-                      <SelectItem
-                        key={marketOption}
-                        value={marketOption}
-                        className="focus:text-white cursor-pointer"
-                      >
-                        {marketOption}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-marker" disabled>
-                      No model available
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div> */}
+              </Popover>
+            </div>
 
             <Button
               className="w-fit self-end min-w-28"
