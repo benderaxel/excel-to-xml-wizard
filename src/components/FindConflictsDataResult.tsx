@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Info } from "lucide-react";
+import { Info, Copy, Check } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -10,14 +10,22 @@ import {
 } from "./ui/table";
 import { Badge } from "./ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+import { Button } from "./ui/button";
+import { useToast } from "@/hooks/use-toast";
+
+type VersionModel = {
+  model_number: string;
+  model_name: string;
+};
 
 type VersionItem = {
   value: string;
-  models: string[];
+  models: VersionModel[];
 };
 
 export type ComparisonItem = {
   property: string;
+  xml_table?: string;
   version1: VersionItem[];
   version2: VersionItem[];
 };
@@ -27,9 +35,28 @@ type ComparisonResultsProps = {
 };
 
 export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
+  const { toast } = useToast();
+
   if (!data || data.length === 0) {
     return null;
   }
+
+  // Function to copy XML table content to clipboard
+  const copyToClipboard = async (xmlTable: string | undefined) => {
+    if (!xmlTable) return;
+
+    try {
+      await navigator.clipboard.writeText(xmlTable);
+
+      toast({
+        title: "XML copied to clipboard!",
+        variant: "default",
+        duration: 2000,
+      });
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -57,7 +84,26 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                   className={index % 2 === 0 ? "bg-muted/20" : ""}
                 >
                   <TableCell className="align-top font-medium border-r">
-                    {item.property}
+                    <div className="flex justify-between items-start gap-2">
+                      <div>{item.property}</div>
+                      {item.xml_table && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:text-white"
+                              onClick={() => copyToClipboard(item.xml_table)}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">
+                            <p>Copy XML</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="align-top border-r">
                     {item.version1.map((valueObj, i) => (
@@ -96,13 +142,19 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                           {valueObj.models.length > 0 ? (
                             <div className="flex flex-wrap gap-1 mt-1">
                               {valueObj.models.map((model) => (
-                                <Badge
-                                  variant="outline"
-                                  key={model}
-                                  className="font-mono"
-                                >
-                                  {model}
-                                </Badge>
+                                <Tooltip key={model.model_number}>
+                                  <TooltipTrigger asChild>
+                                    <Badge
+                                      variant="outline"
+                                      className="font-mono"
+                                    >
+                                      {model.model_number}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{model.model_name}</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               ))}
                             </div>
                           ) : (
@@ -112,55 +164,66 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                       </div>
                     ))}
                   </TableCell>
-                  <TableCell className="flex flex-col gap-4">
-                    {item.version2.map((valueObj, i) => (
-                      <div key={i} className={i > 0 ? "pt-4 border-t" : ""}>
-                        <div className="font-medium break-all mb-1">
-                          <div className="flex items-center gap-2">
-                            {valueObj.value === "" ? (
-                              <span className="text-muted-foreground italic">
-                                No value
-                              </span>
-                            ) : (
-                              <>
-                                {valueObj.value}
-                                {valueObj.value.includes("LCR:") && (
-                                  <Tooltip>
-                                    <TooltipTrigger>
-                                      <Info className="h-4 w-4 text-muted-foreground" />
+                  <TableCell className="align-top">
+                    {item.version2.map((valueObj, i) => {
+                      return (
+                        <div
+                          key={i}
+                          className={i > 0 ? "mt-4 pt-4 border-t" : ""}
+                        >
+                          <div className="font-medium break-all mb-1">
+                            <div className="flex items-center gap-2">
+                              {valueObj.value === "" ? (
+                                <span className="text-muted-foreground italic">
+                                  No updates
+                                </span>
+                              ) : (
+                                <>
+                                  {valueObj.value}
+                                  {valueObj.value.includes("LCR:") && (
+                                    <Tooltip>
+                                      <TooltipTrigger>
+                                        <Info className="h-4 w-4 text-muted-foreground" />
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <p className="max-w-xs">
+                                          This property contains conditional
+                                          logic expressions (LCR)
+                                        </p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 items-center text-sm text-muted-foreground">
+                            Models:{" "}
+                            {valueObj.models.length > 0 ? (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {valueObj.models.map((model) => (
+                                  <Tooltip key={model.model_number}>
+                                    <TooltipTrigger asChild>
+                                      <Badge
+                                        variant="outline"
+                                        className="font-mono"
+                                      >
+                                        {model.model_number}
+                                      </Badge>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p className="max-w-xs">
-                                        This property contains conditional logic
-                                        expressions (LCR)
-                                      </p>
+                                      <p>{model.model_name}</p>
                                     </TooltipContent>
                                   </Tooltip>
-                                )}
-                              </>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="italic">None</span>
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2 items-center text-sm text-muted-foreground">
-                          Models:{" "}
-                          {valueObj.models.length > 0 ? (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {valueObj.models.map((model) => (
-                                <Badge
-                                  variant="outline"
-                                  key={model}
-                                  className="font-mono"
-                                >
-                                  {model}
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="italic">None</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </TableCell>
                 </TableRow>
               ))}
