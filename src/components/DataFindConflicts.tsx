@@ -169,7 +169,10 @@ export const DataFindConflicts = () => {
                   onValueChange={setModel}
                   disabled={isLoadingOptions}
                 >
-                  <SelectTrigger id="model" className="w-full">
+                  <SelectTrigger
+                    id="model"
+                    className="w-full hover:bg-accent hover:text-white"
+                  >
                     {isLoadingOptions ? (
                       <LoadingSpinner />
                     ) : (
@@ -209,7 +212,10 @@ export const DataFindConflicts = () => {
                   onValueChange={setMarket}
                   disabled={isLoadingOptions}
                 >
-                  <SelectTrigger id="market" className="w-full">
+                  <SelectTrigger
+                    id="market"
+                    className="w-full hover:bg-accent hover:text-white"
+                  >
                     {isLoadingOptions ? (
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -262,68 +268,49 @@ export const DataFindConflicts = () => {
                         <span>Loading...</span>
                       </div>
                     ) : graphProperty.length > 0 ? (
-                      <span>{`${graphProperty.length} properties selected`}</span>
+                      <span className="text-inherit">{`${graphProperty.length} properties selected`}</span>
                     ) : (
-                      <span className="text-muted-foreground">
-                        Select properties...
-                      </span>
+                      <span className="">Select properties</span>
                     )}
                     <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                {graphProperties &&
-                  Array.isArray(graphProperties) &&
-                  graphProperties.length > 0 && (
-                    <PopoverContent className="w-full p-0" align="start">
-                      {graphProperties &&
-                      Array.isArray(graphProperties) &&
-                      graphProperties.length > 0 ? (
-                        <Command>
-                          <CommandInput placeholder="Search properties..." />
-                          <CommandList>
-                            <CommandEmpty>No property found.</CommandEmpty>
-                            <CommandGroup className="max-h-60 overflow-auto">
-                              {graphProperties.map((property) => (
-                                <CommandItem
-                                  key={property.key}
-                                  value={property.value}
-                                  className="hover:cursor-pointer "
-                                  onSelect={() => {
-                                    setGraphProperty((prev) => {
-                                      if (prev.includes(property.key)) {
-                                        return prev.filter(
-                                          (item) => item !== property.key
-                                        );
-                                      }
-                                      return [...prev, property.key];
-                                    });
-                                  }}
-                                >
-                                  <div className="flex items-center gap-2 w-full">
-                                    <Checkbox
-                                      checked={graphProperty.includes(
-                                        property.key
-                                      )}
-                                      className="mr-2"
-                                    />
-                                    <span>{property.value}</span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      ) : (
-                        <div className="p-4 text-center">
-                          <p className="text-sm text-muted-foreground">
-                            {isLoadingOptions
-                              ? "Loading properties..."
-                              : "No properties available"}
-                          </p>
-                        </div>
-                      )}
-                    </PopoverContent>
-                  )}
+
+                <PopoverContent className="w-full p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search properties" />
+                    <CommandList>
+                      <CommandEmpty>No property found.</CommandEmpty>
+                      <CommandGroup className="max-h-60 overflow-auto">
+                        {graphProperties.map((property) => (
+                          <CommandItem
+                            key={property.key}
+                            value={property.value}
+                            className="hover:cursor-pointer "
+                            onSelect={() => {
+                              setGraphProperty((prev) => {
+                                if (prev.includes(property.key)) {
+                                  return prev.filter(
+                                    (item) => item !== property.key
+                                  );
+                                }
+                                return [...prev, property.key];
+                              });
+                            }}
+                          >
+                            <div className="flex items-center gap-2 w-full">
+                              <Checkbox
+                                checked={graphProperty.includes(property.key)}
+                                className="mr-2"
+                              />
+                              <span>{property.value}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
               </Popover>
             </div>
 
