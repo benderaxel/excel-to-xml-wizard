@@ -1,6 +1,6 @@
 import { DataChangeRequest } from "@/components/DataFindConflicts";
-import { configStore } from "../utils/configStore";
-import { ExcelData, parseExcelFile } from "../utils/excelParser";
+
+import { parseExcelFile } from "../utils/excelParser";
 
 export type ServerResponse = {
   success: boolean;
@@ -9,12 +9,14 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
+const BASE_URL = "searxng.ai-assistant.corp.aleido.se";
+
 export const uploadFile = async (
   file: File,
   sessionId: string
 ): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/api/v2/ingest/${sessionId}`;
+    const apiUrl = `${BASE_URL}/api/v2/ingest/${sessionId}`;
     const formData = new FormData();
     formData.append("file", file);
 
@@ -23,10 +25,7 @@ export const uploadFile = async (
     const response = await fetch(apiUrl, {
       method: "POST",
       body: formData,
-      // Important: Don't set Content-Type header when sending FormData
-      // The browser will automatically set it with the correct boundary
-      credentials: "include",
-      mode: "cors",
+      credentials: "omit",
     });
 
     console.log("Upload response status:", response.status);
@@ -69,90 +68,6 @@ export const uploadFile = async (
   }
 };
 
-export const checkServerHealth = async (): Promise<boolean> => {
-  try {
-    // First check our proxy health
-    const proxyHealthUrl =
-      window.location.port === "8080"
-        ? "http://localhost:8081/proxy-health"
-        : `${configStore.serverUrl}:${configStore.serverPort}/proxy-health`;
-
-    try {
-      const proxyResponse = await fetch(proxyHealthUrl, {
-        mode: "cors",
-        credentials: "omit", // Change from 'include' to 'omit' for proxy health check
-      });
-
-      if (proxyResponse.ok) {
-        console.log("API Proxy is healthy");
-      } else {
-        console.warn("API Proxy health check failed");
-      }
-    } catch (proxyError) {
-      console.warn("Could not reach API proxy:", proxyError);
-    }
-
-    // Now check the actual Mercedes API health
-    const apiUrl = `${configStore.getApiUrl()}/health`;
-    console.log(`Checking server health at: ${apiUrl}`);
-
-    const response = await fetch(apiUrl, {
-      credentials: "omit", // Change from 'include' to 'omit' for health check
-      mode: "cors",
-    });
-
-    console.log(`Health check response status: ${response.status}`);
-
-    if (!response.ok) {
-      console.error(`Health check failed with status: ${response.status}`);
-      return false;
-    }
-
-    const result = await response.json();
-    console.log("Health check result:", result);
-    return result.health === true;
-  } catch (error) {
-    console.error("Health check error:", error);
-    return false;
-  }
-};
-
-export const ingestLocalData = async (): Promise<ServerResponse> => {
-  try {
-    const apiUrl = `${configStore.getApiUrl()}/ingest`;
-    console.log(`Ingesting local data from: ${apiUrl}`);
-
-    const response = await fetch(apiUrl, {
-      method: "GET",
-      mode: "cors",
-      credentials: "omit", // Change from 'include' to 'omit'
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Server responded with ${response.status}: ${errorText}`);
-    }
-
-    const result = await response.json();
-
-    return {
-      success: true,
-      message: "Local data ingested successfully",
-      data: result,
-      statusCode: response.status,
-    };
-  } catch (error) {
-    console.error("Ingest error:", error);
-    return {
-      success: false,
-      message:
-        error instanceof Error
-          ? error.message
-          : "Unknown error occurred during ingestion",
-    };
-  }
-};
-
 export const queryDataGraph = async (
   body: {
     build_line: string;
@@ -162,7 +77,7 @@ export const queryDataGraph = async (
   sessionId: string
 ): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/api/v2/query/${sessionId}`;
+    const apiUrl = `${BASE_URL}/api/v2/query/${sessionId}`;
     console.log(`Querying data graph at: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
@@ -172,7 +87,7 @@ export const queryDataGraph = async (
       },
       body: JSON.stringify(body),
       mode: "cors",
-      credentials: "omit", // Change from 'include' to 'omit'
+      credentials: "omit",
     });
 
     if (!response.ok) {
@@ -205,9 +120,11 @@ export async function fetchMarketOptions(
   propertyId: string = "for_market"
 ) {
   try {
-    // /api/v2/property-values/{session_id}/{property_id}
     const response = await fetch(
-      `${configStore.getApiUrl()}/api/v2/property-values/${sessionId}/${propertyId}`
+      `${BASE_URL}/api/v2/property-values/${sessionId}/${propertyId}`,
+      {
+        credentials: "omit",
+      }
     );
 
     if (!response.ok) {
@@ -234,9 +151,9 @@ export async function fetchMarketOptions(
 
 export async function fetchGraphProperties(sessionId: string) {
   try {
-    const response = await fetch(
-      `${configStore.getApiUrl()}/api/v2/properties/${sessionId}`
-    );
+    const response = await fetch(`${BASE_URL}/api/v2/properties/${sessionId}`, {
+      credentials: "omit",
+    });
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
@@ -265,7 +182,7 @@ export async function fetchFindConflictsData(
   body: DataChangeRequest
 ) {
   try {
-    const apiUrl = `${configStore.getApiUrl()}/api/v2/find-conflicts/${sessionId}`;
+    const apiUrl = `${BASE_URL}/api/v2/find-conflicts/${sessionId}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
@@ -274,7 +191,7 @@ export async function fetchFindConflictsData(
       },
       body: JSON.stringify(body),
       mode: "cors",
-      credentials: "omit", // Change from 'include' to 'omit'
+      credentials: "omit",
     });
 
     if (!response.ok) {

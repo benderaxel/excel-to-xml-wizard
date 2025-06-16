@@ -1,45 +1,14 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import FileUpload from "@/components/FileUpload";
 import DataQuery from "@/components/DataQuery";
-import { Cog, Database, Diff, Upload } from "lucide-react";
-import { checkServerHealth } from "@/services/apiService";
-import { configStore } from "@/utils/configStore";
-import ServerConfig from "@/components/ServerConfig";
+import { Database, Diff, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataFindConflicts } from "@/components/DataFindConflicts";
 
 const Index = () => {
-  const [serverStatus, setServerStatus] = useState<boolean | null>(null);
-  const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeTab, setActiveTab] = useState<"excel" | "query" | "conflicts">(
     "excel"
   );
-
-  // Check server status on component mount
-  useEffect(() => {
-    const checkStatus = async () => {
-      const status = await checkServerHealth();
-      setServerStatus(status);
-    };
-
-    checkStatus();
-
-    // Recheck server status every 30 seconds
-    const interval = setInterval(checkStatus, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const getConnectionInfo = () => {
-    if (configStore.ngrokUrl) {
-      return `Connected to ngrok: ${configStore.ngrokUrl}`;
-    } else if (configStore.corsProxy) {
-      return `Connected via CORS proxy: ${configStore.getApiUrl()}`;
-    } else {
-      return `Connected to ${configStore.getApiUrl()}`;
-    }
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -61,47 +30,9 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <span className="text-sm mr-2 hidden sm:inline">Server:</span>
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    serverStatus === null
-                      ? "bg-gray-400"
-                      : serverStatus
-                      ? "bg-primary"
-                      : "bg-red-500"
-                  }`}
-                ></div>
-                <span className="ml-2 text-sm text-gray-600 hidden sm:inline">
-                  {serverStatus === null
-                    ? "Checking..."
-                    : serverStatus
-                    ? getConnectionInfo()
-                    : "Disconnected"}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-1 hover:text-white"
-                onClick={() => setShowConfigModal(true)}
-              >
-                <Cog className="h-4 w-4" />
-                <span className="hidden sm:inline">Server Config</span>
-              </Button>
-            </div>
           </div>
         </div>
       </header>
-
-      {showConfigModal ? (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="max-w-2xl w-full">
-            <ServerConfig onClose={() => setShowConfigModal(false)} />
-          </div>
-        </div>
-      ) : null}
 
       <main className="container px-4 py-8 flex-grow">
         <div className="mx-auto">
@@ -131,7 +62,7 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="excel">
-              <FileUpload onShowConfig={() => setShowConfigModal(true)} />
+              <FileUpload />
             </TabsContent>
 
             <TabsContent value="query">
