@@ -1,16 +1,11 @@
 import React, { useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, FileText, Check, Settings, X, Server } from "lucide-react";
+import { Upload, FileText, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { ExcelData } from "../utils/excelParser";
 import { uploadFile } from "../services/apiService";
-import { configStore } from "../utils/configStore";
 import { useSession } from "@/hooks/useSession";
-
-interface FileUploadProps {
-  onShowConfig: () => void;
-}
 
 interface FileStatus {
   file: File;
@@ -21,7 +16,7 @@ interface FileStatus {
   parsedData: ExcelData | null;
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
+const FileUpload = () => {
   const { sessionId } = useSession();
   const { toast } = useToast();
   const [isDragging, setIsDragging] = useState(false);
@@ -148,17 +143,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
     [handleFiles]
   );
 
-  // Helper function to get connection type description
-  const getConnectionText = () => {
-    if (configStore.ngrokUrl) {
-      return `ngrok forwarding: ${configStore.ngrokUrl}/upload`;
-    } else if (configStore.corsProxy) {
-      return `CORS proxy: ${configStore.getApiUrl()}/upload`;
-    } else {
-      return `${configStore.getApiUrl()}/upload`;
-    }
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -212,10 +196,6 @@ const FileUpload: React.FC<FileUploadProps> = ({ onShowConfig }) => {
                     <p className="text-xs text-gray-400">
                       (Supported formats: .xlsx, .xls)
                     </p>
-                  </div>
-                  <div className="flex items-center justify-center text-xs text-gray-400 mt-2">
-                    <Server className="h-3 w-3 mr-1" />
-                    <span>Server: {getConnectionText()}</span>
                   </div>
                 </>
               )}
