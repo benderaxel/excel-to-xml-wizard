@@ -8,5 +8,21 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 3001:8080
+      - "8080:8080"
+    restart: unless-stopped
+    networks:
+      - app-network
+  
+  api-proxy:
+    image: node:20-alpine
+    volumes:
+      - ./api-proxy:/app
+    working_dir: /app
+    command: sh -c "npm install && node server.js"
+    ports:
+      - "8081:8081"
+    networks:
+      - app-network
+    environment:
+      - MERCEDES_API_URL=https://8744-109-205-220-22.ngrok-free.app
     restart: unless-stopped
