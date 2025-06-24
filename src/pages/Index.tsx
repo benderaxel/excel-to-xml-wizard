@@ -1,14 +1,15 @@
 import { useState } from "react";
 import FileUpload from "@/components/FileUpload";
 import DataQuery from "@/components/DataQuery";
-import { Database, Diff, Upload } from "lucide-react";
+import { Database, Diff, SquareChartGantt, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DataFindConflicts } from "@/components/DataFindConflicts";
+import { DataOverview } from "@/components/DataOverview";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<"excel" | "query" | "conflicts">(
-    "excel"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "excel" | "query" | "conflicts | overview"
+  >("excel");
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -39,11 +40,11 @@ const Index = () => {
           <Tabs
             value={activeTab}
             onValueChange={(val) =>
-              setActiveTab(val as "excel" | "query" | "conflicts")
+              setActiveTab(val as "excel" | "query" | "conflicts | overview")
             }
             className="flex flex-col w-full gap-6"
           >
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="excel" className="flex items-center gap-2">
                 <Upload className="h-4 w-4" />
                 Upload excel file(s)
@@ -59,6 +60,10 @@ const Index = () => {
                 <Diff className="h-4 w-4" />
                 Find conflicts
               </TabsTrigger>
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <SquareChartGantt className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="excel">
@@ -71,6 +76,10 @@ const Index = () => {
 
             <TabsContent value="conflicts">
               <DataFindConflicts />
+            </TabsContent>
+
+            <TabsContent value="overview">
+              <DataOverview />
             </TabsContent>
           </Tabs>
         </div>
