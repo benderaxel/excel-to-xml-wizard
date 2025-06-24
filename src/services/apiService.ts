@@ -9,7 +9,7 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
-const BASE_URL = "searxng.ai-assistant.corp.aleido.se";
+const BASE_URL = "http://ai-assistant.corp.aleido.se:3000";
 
 export const uploadFile = async (
   file: File,
@@ -204,6 +204,42 @@ export async function fetchFindConflictsData(
     return {
       success: true,
       message: "fetchCompareData executed successfully",
+      data: result,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred during data comparison",
+    };
+  }
+}
+
+export async function fetchOverviewData(sessionId: string) {
+  try {
+    const apiUrl = `${BASE_URL}/api/v2/new-and-removed/${sessionId}`;
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      mode: "cors",
+      credentials: "omit",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+
+    const result = await response.json();
+
+    return {
+      success: true,
+      message: "fetchOverviewData executed successfully",
       data: result,
     };
   } catch (error) {
