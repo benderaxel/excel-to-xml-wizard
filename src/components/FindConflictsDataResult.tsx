@@ -75,6 +75,7 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                 <TableHead className="w-1/3">Property</TableHead>
                 <TableHead className="w-1/3">Old value(s)</TableHead>
                 <TableHead className="w-1/3">New value(s)</TableHead>
+                <TableHead className="w-[5%]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -195,28 +196,28 @@ export const FindConflictsDataResult = ({ data }: ComparisonResultsProps) => {
                               )}
                             </div>
                           </div>
-                          {item.xml_table && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 hover:text-white"
-                                  onClick={() =>
-                                    copyToClipboard(item.xml_table)
-                                  }
-                                >
-                                  <Copy className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="right">
-                                <p>Copy XML</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
                         </div>
                       );
                     })}
+                  </TableCell>
+                  <TableCell>
+                    {item.xml_table && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:text-white"
+                            onClick={() => copyToClipboard(item.xml_table)}
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Copy XML</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
