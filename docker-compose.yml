@@ -2,31 +2,27 @@
 version: '3.8'
 
 services:
-  frontend:
+  mercedes-fe:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
-    restart: unless-stopped
+      - 3002:8080
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mercedes-fe.rule=Host(`dev.ai-assistant.corp.aleido.se`)
+      - traefik.http.routers.mercedes-fe.entrypoints=websecure
+      - traefik.http.routers.mercedes-fe.tls=true
+      - traefik.http.services.mercedes-fe.loadbalancer.server.port=8080
     networks:
-      - app-network
-  
-  api-proxy:
-    image: node:20-alpine
-    volumes:
-      - ./api-proxy:/app
-    working_dir: /app
-    command: sh -c "npm install && node server.js"
-    ports:
-      - "8081:8081"
-    networks:
-      - app-network
+      - ollama
+      - traefik
     environment:
-      - MERCEDES_API_URL=https://c572-109-205-220-22.ngrok-free.app
+      - MERCEDES_API_URL=https://agco-changzhou-assignment.ai-assistant.corp.aleido.se
     restart: unless-stopped
-
+  
 networks:
-  app-network:
-    name: app-network
-    external: true  # Connect to the same network used by Mercedes
+  ollama:
+    external: true
+  traefik:
+    external: true

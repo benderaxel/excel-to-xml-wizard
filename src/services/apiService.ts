@@ -9,14 +9,15 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
-const BASE_URL = "http://ai-assistant.corp.aleido.se:3000";
+const BASE_URL = "" //"http://ai-assistant.corp.aleido.se:3000";
 
 export const uploadFile = async (
   file: File,
   sessionId: string
 ): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${BASE_URL}/api/v2/ingest/${sessionId}`;
+
+    const apiUrl = `/api/v2/ingest/${sessionId}`;
     const formData = new FormData();
     formData.append("file", file);
 
@@ -77,7 +78,7 @@ export const queryDataGraph = async (
   sessionId: string
 ): Promise<ServerResponse> => {
   try {
-    const apiUrl = `${BASE_URL}/api/v2/query/${sessionId}`;
+    const apiUrl = `/api/v2/query/${sessionId}`;
     console.log(`Querying data graph at: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
@@ -121,7 +122,7 @@ export async function fetchMarketOptions(
 ) {
   try {
     const response = await fetch(
-      `${BASE_URL}/api/v2/property-values/${sessionId}/${propertyId}`,
+      `/api/v2/property-values/${sessionId}/${propertyId}`,
       {
         credentials: "omit",
       }
@@ -151,7 +152,7 @@ export async function fetchMarketOptions(
 
 export async function fetchGraphProperties(sessionId: string) {
   try {
-    const response = await fetch(`${BASE_URL}/api/v2/properties/${sessionId}`, {
+    const response = await fetch(`/api/v2/properties/${sessionId}`, {
       credentials: "omit",
     });
 
@@ -182,7 +183,7 @@ export async function fetchFindConflictsData(
   body: DataChangeRequest
 ) {
   try {
-    const apiUrl = `${BASE_URL}/api/v2/find-conflicts/${sessionId}`;
+    const apiUrl = `/api/v2/find-conflicts/${sessionId}`;
 
     const response = await fetch(apiUrl, {
       method: "POST",
