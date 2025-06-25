@@ -9,7 +9,7 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
-const BASE_URL = "" //Leave blank for remote (Pine) deployment. Access remote hosted backend from locally hosted frontend "http://ai-assistant.corp.aleido.se:3000";
+const BASE_URL = "http://ai-assistant.corp.aleido.se:3000" //Leave blank for remote (Pine) deployment. Access remote hosted backend from locally hosted frontend "http://ai-assistant.corp.aleido.se:3000";
 
 export const uploadFile = async (
   file: File,
