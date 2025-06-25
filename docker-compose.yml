@@ -9,12 +9,4 @@ services:
       dockerfile: Dockerfile
     ports:
       - 3001:8080
-    networks:
-      - app-network
     restart: unless-stopped
-  
-networks:
-  app-network:
-    name: app-network
-    external: true  # Connect to the same network used by Mercedes
-
