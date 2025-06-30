@@ -2,7 +2,6 @@ import { createContext, useContext } from "react";
 
 interface SessionContextType {
   sessionId: string;
-  refreshSession: () => void;
 }
 
 export const SessionContext = createContext<SessionContextType | undefined>(
