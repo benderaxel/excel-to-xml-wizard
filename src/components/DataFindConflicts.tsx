@@ -5,6 +5,7 @@ import {
   fetchFindConflictsData,
   fetchGraphProperties,
   fetchMarketOptions,
+  fetchConflictsExcel,
 } from "@/services/apiService";
 import { useSession } from "@/hooks/useSession";
 import { useToast } from "@/hooks/use-toast";
@@ -147,6 +148,36 @@ export const DataFindConflicts = () => {
       setFindConflictsData(null);
     } finally {
       setIsLoadingFindConflictsData(false);
+    }
+  };
+
+  const handleDownloadExcel = async () => {
+    try {
+      const downloadResponse = await fetchConflictsExcel(sessionId);
+
+      if (!downloadResponse.success) {
+        throw new Error(
+          downloadResponse.message || "Failed to download Excel file"
+        );
+      }
+      const blob = new Blob([downloadResponse.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `conflicts_${new Date().toISOString()}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download Excel file.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -312,19 +343,19 @@ export const DataFindConflicts = () => {
                   </Command>
                 </PopoverContent>
               </Popover>
-            </div>
 
-            <Button
-              className="w-fit self-end min-w-28"
-              onClick={handleSubmit}
-              disabled={isLoadingOptions}
-            >
-              {isLoadingOptions ? (
-                <LoadingSpinner showText={false} />
-              ) : (
-                "Find conflicts"
-              )}
-            </Button>
+              <Button
+                className="w-fit self-end min-w-28"
+                onClick={handleSubmit}
+                disabled={isLoadingOptions}
+              >
+                {isLoadingOptions ? (
+                  <LoadingSpinner showText={false} />
+                ) : (
+                  "Find conflicts"
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -333,12 +364,18 @@ export const DataFindConflicts = () => {
       {(isLoadingFindConflictsData || findConflictsData) && (
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>
-              {isLoadingFindConflictsData
-                ? "Finding Conflicts..."
-                : findConflictsData && findConflictsData.length > 0
-                ? `Conflicts Results (${findConflictsData.length})`
-                : "No Conflicts Found"}
+            <CardTitle className="flex items-center justify-between">
+              <p>
+                {isLoadingFindConflictsData
+                  ? "Finding Conflicts..."
+                  : findConflictsData && findConflictsData.length > 0
+                  ? `Conflicts Results (${findConflictsData.length})`
+                  : "No Conflicts Found"}
+              </p>
+
+              {findConflictsData && findConflictsData.length > 0 && (
+                <Button onClick={handleDownloadExcel}>Download excel</Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>

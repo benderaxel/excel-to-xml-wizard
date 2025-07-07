@@ -9,14 +9,13 @@ export type ServerResponse = {
   statusCode?: number;
 };
 
-const BASE_URL = "http://ai-assistant.corp.aleido.se:3000" //Leave blank for remote (Pine) deployment. Access remote hosted backend from locally hosted frontend "http://ai-assistant.corp.aleido.se:3000";
+const BASE_URL = "http://ai-assistant.corp.aleido.se:3000"; //Leave blank for remote (Pine) deployment. Access remote hosted backend from locally hosted frontend "http://ai-assistant.corp.aleido.se:3000";
 
 export const uploadFile = async (
   file: File,
   sessionId: string
 ): Promise<ServerResponse> => {
   try {
-
     const apiUrl = `${BASE_URL}/api/v2/ingest/${sessionId}`;
     const formData = new FormData();
     formData.append("file", file);
@@ -250,6 +249,36 @@ export async function fetchOverviewData(sessionId: string) {
         error instanceof Error
           ? error.message
           : "Unknown error occurred during data comparison",
+    };
+  }
+}
+
+export async function fetchConflictsExcel(sessionId: string) {
+  try {
+    const apiUrl = `${BASE_URL}/api/v2/get-last-conflicts-export/${sessionId}`;
+
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Server responded with ${response.status}: ${errorText}`);
+    }
+
+    // Handle blob response for file download
+    const blob = await response.blob();
+
+    return {
+      success: true,
+      message: "Excel file fetched successfully",
+      data: blob,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unknown error occurred during Excel download",
     };
   }
 }
